@@ -393,3 +393,48 @@ body.has-bg-image .page { background: color-mix(in srgb, var(--bg) 92%, transpar
 .ic-inline svg { width: 15px; height: 15px; flex: none; display: block; color: var(--primary); }
 .bento-ic { width: 40px; height: 40px; border-radius: calc(var(--radius) * .6); background: var(--soft); color: var(--primary); display: grid; place-items: center; margin-bottom: 10px; }
 .bento-ic svg { width: 20px; height: 20px; display: block; }
+
+/* ----- Animaciones de página, intro, hover y Hero ----- */
+.intro-splash { position: fixed; inset: 0; z-index: 200; background: var(--bg); color: var(--text); display: grid; place-items: center; transition: opacity .45s ease, transform .55s cubic-bezier(.22,1,.36,1); }
+.intro-splash .intro-inner { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 24px; }
+.intro-splash img { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; box-shadow: var(--shadow); }
+.intro-splash span { font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
+.intro-splash.intro-logo-fade .intro-inner { animation: introFade .7s ease both; }
+.intro-splash.intro-logo-zoom .intro-inner { animation: introZoom .75s cubic-bezier(.22,1,.36,1) both; }
+.intro-splash.intro-curtain .intro-inner { animation: introFade .55s ease both; }
+.intro-splash.out { opacity: 0; pointer-events: none; }
+.intro-splash.intro-curtain.out { opacity: 1; transform: translateY(-100%); }
+@keyframes introFade { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes introZoom { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: scale(1); } }
+
+.page[data-speed="fast"] { --anim-dur: .38s; }
+.page[data-speed="normal"] { --anim-dur: .65s; }
+.page[data-speed="slow"] { --anim-dur: 1.05s; }
+
+.page[data-anim]:not([data-anim="none"]) > * {
+  opacity: 0;
+  transition: opacity var(--anim-dur, .65s) ease var(--stagger, 0ms), transform var(--anim-dur, .65s) cubic-bezier(.22,1,.36,1) var(--stagger, 0ms), filter var(--anim-dur, .65s) ease var(--stagger, 0ms);
+}
+.page[data-anim="slide-up"] > * { transform: translateY(28px); }
+.page[data-anim="slide-left"] > * { transform: translateX(-28px); }
+.page[data-anim="zoom"] > * { transform: scale(.94); }
+.page[data-anim="blur"] > * { filter: blur(8px); transform: translateY(10px); }
+.page[data-anim]:not([data-anim="none"]) > *.in-view { opacity: 1; transform: none; filter: none; }
+
+.page[data-hover="lift"] .card, .page[data-hover="lift"] .bento-card, .page[data-hover="lift"] .link-card, .page[data-hover="lift"] .plan-card, .page[data-hover="lift"] .car-card, .page[data-hover="lift"] .btn { transition: transform .22s ease, box-shadow .22s ease; }
+.page[data-hover="lift"] .card:hover, .page[data-hover="lift"] .bento-card:hover, .page[data-hover="lift"] .link-card:hover, .page[data-hover="lift"] .plan-card:hover, .page[data-hover="lift"] .car-card:hover, .page[data-hover="lift"] .btn:hover { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(0,0,0,.12); }
+
+.page[data-hover="scale"] .card, .page[data-hover="scale"] .bento-card, .page[data-hover="scale"] .link-card, .page[data-hover="scale"] .plan-card, .page[data-hover="scale"] .car-card, .page[data-hover="scale"] .btn { transition: transform .22s ease; }
+.page[data-hover="scale"] .card:hover, .page[data-hover="scale"] .bento-card:hover, .page[data-hover="scale"] .link-card:hover, .page[data-hover="scale"] .plan-card:hover, .page[data-hover="scale"] .car-card:hover, .page[data-hover="scale"] .btn:hover { transform: scale(1.025); }
+
+.page[data-hover="glow"] .card, .page[data-hover="glow"] .bento-card, .page[data-hover="glow"] .link-card, .page[data-hover="glow"] .plan-card, .page[data-hover="glow"] .car-card, .page[data-hover="glow"] .btn { transition: box-shadow .22s ease, border-color .22s ease; }
+.page[data-hover="glow"] .card:hover, .page[data-hover="glow"] .bento-card:hover, .page[data-hover="glow"] .link-card:hover, .page[data-hover="glow"] .plan-card:hover, .page[data-hover="glow"] .car-card:hover, .page[data-hover="glow"] .btn:hover { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent), 0 8px 22px color-mix(in srgb, var(--primary) 22%, transparent); }
+
+.page[data-hero-motion="ken-burns"] .hero.has-image { animation: heroKenBurns 18s ease-in-out infinite alternate; }
+@keyframes heroKenBurns { from { background-size: 100%; } to { background-size: 112%; } }
+.page[data-hero-motion="float"] .hero-logo, .page[data-hero-motion="float"] .hero-fg { animation: heroFloat 3.6s ease-in-out infinite; }
+@keyframes heroFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-splash, .page[data-anim] > *, .hero { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
+}

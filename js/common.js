@@ -281,6 +281,7 @@ export const DEFAULT_DESIGN = {
     ctaText: '', ctaType: 'url', ctaUrl: '', ctaBlock: '',
     size: 'md', fullHeight: false,
   },
+  animations: { intro: 'none', entrance: 'none', speed: 'normal', hover: 'none', heroMotion: 'none' },
   blocks: [
     { id: 'b-hero', type: 'hero', visible: true },
     { id: 'b-catalog', type: 'catalog', visible: true, template: 'list', showCategories: true, showSearch: true, showSortFilter: true, showTitle: true, showPrice: true, showDescription: true, showExternalLink: false, showCartButton: true },
@@ -299,6 +300,7 @@ export function withDefaults(cfg = {}) {
       colors: { ...DEFAULT_DESIGN.colors, ...(d.colors || {}) },
       background: { ...DEFAULT_DESIGN.background, ...(d.background || {}) },
       hero: { ...DEFAULT_DESIGN.hero, ...(d.hero || {}) },
+      animations: { ...DEFAULT_DESIGN.animations, ...(d.animations || {}) },
       blocks: Array.isArray(d.blocks) && d.blocks.length ? d.blocks : DEFAULT_DESIGN.blocks,
     },
     checkout: cfg.checkout || {},

@@ -538,10 +538,56 @@ function renderFabs() {
   }).join('');
 }
 
+let introPlayed = false;
+function playIntro(force = false) {
+  const anim = state.cfg.design.animations || {};
+  const kind = ['logo-fade', 'curtain', 'logo-zoom'].includes(anim.intro) ? anim.intro : 'none';
+  if (kind === 'none') return;
+  if (!force && (introPlayed || PREVIEW)) return;
+  introPlayed = true;
+  $('.intro-splash')?.remove();
+  const logo = safeUrl(state.cfg.store.logo);
+  const speed = ['fast', 'normal', 'slow'].includes(anim.speed) ? anim.speed : 'normal';
+  const dur = speed === 'fast' ? 950 : speed === 'slow' ? 1900 : 1350;
+  const el = document.createElement('div');
+  el.className = `intro-splash intro-${kind} spd-${speed}`;
+  el.innerHTML = `<div class="intro-inner">${logo ? `<img src="${esc(logo)}" alt="">` : ''}<span>${esc(state.cfg.store.name)}</span></div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.add('out'), Math.round(dur * 0.65));
+  setTimeout(() => el.remove(), dur + 500);
+}
+
+let animObs;
+function setupAnimations(replay = false) {
+  animObs?.disconnect();
+  const page = $('.page');
+  if (!page) return;
+  const anim = state.cfg.design.animations || {};
+  const ent = ['fade', 'slide-up', 'slide-left', 'zoom', 'blur'].includes(anim.entrance) ? anim.entrance : 'none';
+  if (ent === 'none') return;
+  const items = [...page.children];
+  if (replay) items.forEach((el) => el.classList.remove('in-view'));
+  animObs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in-view');
+        animObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.06, rootMargin: '0px 0px -24px 0px' });
+  items.forEach((el, idx) => {
+    el.style.setProperty('--stagger', `${Math.min(idx, 6) * 70}ms`);
+    animObs.observe(el);
+  });
+}
+
 function render() {
   const { store, design, checkout } = state.cfg;
   applyTheme(design);
   document.title = store.name || 'Tienda';
+  const logoUrl = safeUrl(store.logo);
+  const fav = document.querySelector('link[rel="icon"]');
+  if (fav && logoUrl) fav.href = logoUrl;
   const bg = design.background || {};
   const bgImg = bg.type === 'image' ? safeUrl(bg.image) : '';
   const bgVid = bg.type === 'video' ? safeUrl(bg.video) : '';
@@ -552,6 +598,12 @@ function render() {
     ? `linear-gradient(rgba(${ovRgb},${ovAlpha}),rgba(${ovRgb},${ovAlpha})),url('${bgImg.replace(/'/g, '%27')}')`
     : '';
 
+  const anim = design.animations || {};
+  const ent = ['fade', 'slide-up', 'slide-left', 'zoom', 'blur'].includes(anim.entrance) ? anim.entrance : 'none';
+  const speed = ['fast', 'normal', 'slow'].includes(anim.speed) ? anim.speed : 'normal';
+  const hover = ['lift', 'scale', 'glow'].includes(anim.hover) ? anim.hover : 'none';
+  const heroMotion = ['ken-burns', 'float'].includes(anim.heroMotion) ? anim.heroMotion : 'none';
+
   const blocks = design.blocks || [];
   const hasCustomFooter = blocks.some((b) => b.type === 'footer' && b.visible !== false);
   const scroll = window.scrollY;
@@ -559,7 +611,7 @@ function render() {
     ${bgVid ? `<div class="bg-video-wrap"><video src="${esc(bgVid)}" autoplay muted loop playsinline></video><div style="background:rgba(${ovRgb},${ovAlpha})"></div></div>` : ''}
     ${PREVIEW ? '<div class="banner-preview">Vista previa · los cambios aún no están publicados</div>' : ''}
     ${checkout.paused ? '<div class="banner-paused">La tienda no está recibiendo pedidos en este momento.</div>' : ''}
-    <div class="page" id="top">
+    <div class="page" id="top" data-anim="${ent}" data-speed="${speed}" data-hover="${hover}" data-hero-motion="${heroMotion}">
       ${blocks.map(renderBlock).join('')}
       ${hasCustomFooter ? '' : `<footer class="footer">© ${new Date().getFullYear()} ${esc(store.name)}</footer>`}
     </div>
@@ -568,6 +620,8 @@ function render() {
   window.scrollTo(0, scroll);
   setupScrollSpy();
   setupPopups();
+  setupAnimations();
+  playIntro(false);
 }
 
 function updateCartFab(bump) {
@@ -1077,7 +1131,13 @@ document.addEventListener('input', (e) => {
 // ---------- Vista previa desde el panel ----------
 if (PREVIEW) {
   window.addEventListener('message', (e) => {
-    if (e.origin !== location.origin || e.data?.type !== 'fm-preview') return;
+    if (e.origin !== location.origin) return;
+    if (e.data?.type === 'fm-replay-anim') {
+      playIntro(true);
+      setupAnimations(true);
+      return;
+    }
+    if (e.data?.type !== 'fm-preview') return;
     const d = e.data;
     if (d.config) state.cfg = withDefaults({ ...state.cfg, ...d.config });
     if (d.categories) state.cats = d.categories;
