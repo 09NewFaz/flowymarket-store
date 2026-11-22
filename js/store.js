@@ -92,11 +92,30 @@ function thumbHtml(p, overlay = '') {
   const src = safeUrl(p?.img);
   return `<div class="thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : ICON.tag}${overlay}</div>`;
 }
-function priceHtml(p) {
-  const hasOffer = p.offer != null && Number(p.offer) < Number(p.price);
-  return hasOffer
-    ? `<span>${money(p.offer, cur())}</span><s>${money(p.price, cur())}</s>`
-    : `<span>${money(p.price, cur())}</span>`;
+function hasPaidOptions(p) {
+  return Array.isArray(p?.options) && p.options.some((g) => (g.items || []).some((it) => it.available !== false && Number(it.price) > 0));
+}
+function offerInfo(p) {
+  const price = Number(p?.price) || 0;
+  const offer = p?.offer != null ? Number(p.offer) : null;
+  if (offer == null || offer >= price || price <= 0) return null;
+  const save = price - offer;
+  const pct = Math.round((save / price) * 100);
+  return { price, offer, save, pct };
+}
+function priceHtml(p, { showFrom = false, showSave = false } = {}) {
+  const off = offerInfo(p);
+  const from = showFrom && hasPaidOptions(p) ? '<span class="price-from">Desde</span>' : '';
+  if (off) {
+    return `${from}<span>${money(off.offer, cur())}</span><s>${money(off.price, cur())}</s>${showSave ? `<span class="save-pill">Ahorras ${money(off.save, cur())}</span>` : ''}`;
+  }
+  return `${from}<span>${money(p.price, cur())}</span>`;
+}
+function cartSavings() {
+  return state.cart.reduce((s, l) => {
+    const off = offerInfo(prodById(l.id));
+    return s + (off ? off.save * l.q : 0);
+  }, 0);
 }
 
 // ---------- Render principal ----------
@@ -185,14 +204,17 @@ function renderCatalog(b = {}) {
   const card = (p) => {
     const soldout = p.stock === 0;
     const canQuick = showCartBtn && p.cart && !soldout && !state.cfg.checkout.paused;
-    const badge = soldout ? '<span class="badge gray">Agotado</span>' : p.offer != null && Number(p.offer) < Number(p.price) ? '<span class="badge">Oferta</span>' : '';
+    const off = offerInfo(p);
+    const badge = soldout
+      ? '<span class="badge gray">Agotado</span>'
+      : off ? `<span class="badge">${off.pct >= 1 ? `-${off.pct}%` : 'Oferta'}</span>` : '';
     return `<div class="card ${soldout ? 'soldout' : ''}" role="button" tabindex="0" data-product="${esc(p.id)}">
       ${thumbHtml(p, badge)}
       <div class="card-body">
         ${showTitle ? `<h3>${esc(p.title)}</h3>` : ''}
         ${showDesc && p.description ? `<p>${esc(p.description)}</p>` : ''}
         <div class="card-foot">
-          ${showPrice ? `<div class="price">${priceHtml(p)}</div>` : '<span></span>'}
+          ${showPrice ? `<div class="price">${priceHtml(p, { showFrom: true, showSave: true })}</div>` : '<span></span>'}
           ${canQuick ? `<button type="button" class="quick-add" data-quick-add="${esc(p.id)}" aria-label="Agregar ${esc(p.title)} al carrito">${ICON.cart}</button>` : ''}
         </div>
       </div>
@@ -813,7 +835,7 @@ function openProduct(id) {
     <div class="sheet-body">
       ${imgs.length ? `<div class="gallery ${imgs.length === 1 ? 'single' : ''}">${imgs.map((s) => `<img src="${esc(s)}" alt="">`).join('')}</div>` : ''}
       <h3 class="p-title">${esc(p.title)}</h3>
-      <div class="price" style="margin-bottom:10px">${priceHtml(p)}</div>
+      <div class="price" style="margin-bottom:10px">${priceHtml(p, { showSave: true })}</div>
       ${p.description ? `<p class="p-desc">${esc(p.description)}</p>` : ''}
       ${p.stock === 0 ? '<p><span class="badge gray">Agotado</span></p>' : p.stock < 99999 && p.stock <= 5 ? `<p class="muted">¡Quedan ${p.stock}!</p>` : ''}
       ${canBuy ? options.map((g, gi) => `
@@ -899,9 +921,11 @@ function openCart() {
       </div>
     </div>`;
   }).join('');
+  const saved = cartSavings();
   const sideCls = getCartBlock()?.sidePanel ? 'side-panel' : '';
   openSheet(`${head('Tu pedido')}
     <div class="sheet-body">${lines}
+      ${saved > 0 ? `<div class="cart-savings">Estás ahorrando <b>${money(saved, cur())}</b> en este pedido</div>` : ''}
       <div class="totals"><div class="grand"><span>Subtotal</span><span>${money(cartSubtotal(), cur())}</span></div></div>
       <p class="muted">El envío, los impuestos y los descuentos se calculan al confirmar.</p>
     </div>
