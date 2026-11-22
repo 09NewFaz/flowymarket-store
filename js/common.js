@@ -91,6 +91,9 @@ export function validSelection(p, sel = []) {
 
 // ---------- Diseño ----------
 export const PALETTES = [
+  { id: 'flowy-ice',     name: 'Flowy Ice',     primary: '#7fd8f7', secondary: '#081426', text: '#eef8ff' },
+  { id: 'glacier',       name: 'Glacier',       primary: '#56ccf2', secondary: '#0d2137', text: '#f0f9ff' },
+  { id: 'arctic-light',  name: 'Arctic Light',  primary: '#0ea5e9', secondary: '#edf7fc', text: '#0c2340' },
   { id: 'modern',        name: 'Modern',        primary: '#2c3e50', secondary: '#f8f9fa', text: '#3498db' },
   { id: 'elegant',       name: 'Elegant',       primary: '#34495e', secondary: '#ecf0f1', text: '#9b59b6' },
   { id: 'minimal',       name: 'Minimal',       primary: '#212529', secondary: '#f8f9fa', text: '#20c997' },
