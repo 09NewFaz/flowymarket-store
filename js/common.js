@@ -91,53 +91,185 @@ export function validSelection(p, sel = []) {
 
 // ---------- Diseño ----------
 export const PALETTES = [
-  { id: 'rosa',      name: 'Rosa',       primary: '#e0457b', secondary: '#fdeef2', text: '#c2185b' },
-  { id: 'clasico',   name: 'Clásico',    primary: '#1f6feb', secondary: '#ffffff', text: '#1d2433' },
-  { id: 'minimal',   name: 'Minimal',    primary: '#111111', secondary: '#fafafa', text: '#222222' },
-  { id: 'oceano',    name: 'Océano',     primary: '#0e8fa8', secondary: '#eefafc', text: '#0b4f5c' },
-  { id: 'bosque',    name: 'Bosque',     primary: '#2f7d4f', secondary: '#f1f7f2', text: '#1f3d2b' },
-  { id: 'terracota', name: 'Terracota',  primary: '#c4643c', secondary: '#fbf3ee', text: '#5a2e1b' },
-  { id: 'lavanda',   name: 'Lavanda',    primary: '#7c5cd6', secondary: '#f5f2fd', text: '#3b2a73' },
-  { id: 'mostaza',   name: 'Mostaza',    primary: '#c99a06', secondary: '#fffaea', text: '#4a3a05' },
-  { id: 'arena',     name: 'Arena',      primary: '#8a6a4b', secondary: '#f7f1ea', text: '#3d2f22' },
-  { id: 'menta',     name: 'Menta',      primary: '#14a38b', secondary: '#effbf8', text: '#0d4a40' },
-  { id: 'noche',     name: 'Noche',      primary: '#5b8cff', secondary: '#0f1424', text: '#e6ebff' },
-  { id: 'carbon',    name: 'Carbón',     primary: '#f5b301', secondary: '#151515', text: '#f2f2f2' },
-  { id: 'vino',      name: 'Vino',       primary: '#d4a373', secondary: '#2a0f17', text: '#f6e7d8' },
-  { id: 'esmeralda', name: 'Esmeralda',  primary: '#3ddc97', secondary: '#0d1f1a', text: '#e3fff3' },
+  { id: 'modern',        name: 'Modern',        primary: '#2c3e50', secondary: '#f8f9fa', text: '#3498db' },
+  { id: 'elegant',       name: 'Elegant',       primary: '#34495e', secondary: '#ecf0f1', text: '#9b59b6' },
+  { id: 'minimal',       name: 'Minimal',       primary: '#212529', secondary: '#f8f9fa', text: '#20c997' },
+  { id: 'sakura',        name: 'Sakura',        primary: '#ff758c', secondary: '#fff0f3', text: '#d4145a' },
+  { id: 'matcha',        name: 'Matcha',        primary: '#86a578', secondary: '#f6f5f0', text: '#2c4a34' },
+  { id: 'milano',        name: 'Milano',        primary: '#b54141', secondary: '#f7f0ea', text: '#2b2b2b' },
+  { id: 'santorini',     name: 'Santorini',     primary: '#1e4e8c', secondary: '#ffffff', text: '#1a1a3c' },
+  { id: 'brooklyn',      name: 'Brooklyn',      primary: '#2d2d2d', secondary: '#f5f5f5', text: '#1a1a1a' },
+  { id: 'alexandra',     name: 'Alexandra',     primary: '#614051', secondary: '#f0ead6', text: '#bf4565' },
+  { id: 'coastal',       name: 'Coastal',       primary: '#1d3557', secondary: '#f1faee', text: '#457b9d' },
+  { id: 'nordic',        name: 'Nordic',        primary: '#394648', secondary: '#f4f4f2', text: '#7a6c5d' },
+  { id: 'bistro',        name: 'Bistro',        primary: '#2f2504', secondary: '#f5f3e7', text: '#9b7e46' },
+  { id: 'slate',         name: 'Slate',         primary: '#36454f', secondary: '#f5f5f5', text: '#71797e' },
+  { id: 'artisan',       name: 'Artisan',       primary: '#5d4037', secondary: '#efebe9', text: '#8d6e63' },
+  { id: 'luxe',          name: 'Luxe',          primary: '#212121', secondary: '#fafafa', text: '#ffc107' },
+  { id: 'tech-noir',     name: 'Tech Noir',     primary: '#00ff7f', secondary: '#121212', text: '#ff9e00' },
+  { id: 'dark-elegance', name: 'Dark Elegance', primary: '#7f5af0', secondary: '#16161a', text: '#fffffe' },
+  { id: 'midnight-blue', name: 'Midnight Blue', primary: '#0ea5e9', secondary: '#0f172a', text: '#e2e8f0' },
 ];
 
 export const FONTS = [
-  'Poppins', 'Inter', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Nunito',
-  'Manrope', 'DM Sans', 'Playfair Display', 'Cormorant Garamond', 'Cinzel', 'Tenor Sans',
-  'Georgia', 'Arial',
+  'Roboto', 'Montserrat', 'Open Sans', 'Poppins', 'Inter', 'Lato', 'Raleway', 'Nunito',
+  'Manrope', 'DM Sans', 'Arial', 'Helvetica', 'Georgia', 'Times New Roman',
+  'Playfair Display', 'Cormorant Garamond', 'Cinzel', 'Tenor Sans',
 ];
 const SYSTEM_FONTS = new Set(['Georgia', 'Arial', 'Helvetica', 'Times New Roman']);
 
 export const CORNERS = { square: '2px', semi: '10px', round: '18px' };
 
+export const BLOCK_CATEGORIES = [
+  'Todos los Bloques',
+  'Sección de Presentación',
+  'Contenido',
+  'Multimedia',
+  'E-Commerce',
+  'Interactivo',
+];
+
 export const BLOCK_TYPES = {
-  hero:     { label: 'Sección de presentación', icon: '🖼️', unique: true },
-  catalog:  { label: 'Catálogo de productos',   icon: '🛍️', unique: true },
-  cart:     { label: 'Botón de carrito',        icon: '🛒', unique: true },
-  text:     { label: 'Texto',                   icon: '📝' },
-  image:    { label: 'Imagen / banner',         icon: '🏞️' },
-  whatsapp: { label: 'Botón de WhatsApp',       icon: '💬' },
-  divider:  { label: 'Separador',               icon: '➖' },
+  hero:         { label: 'Sección de Presentación', icon: '🖼️', unique: true, cats: ['Sección de Presentación', 'Contenido'], desc: 'Sección de presentación con título, subtítulo y llamada a la acción' },
+  catalog:      { label: 'Catálogo de Productos',   icon: '🛍️', unique: true, cats: ['Contenido', 'E-Commerce'], desc: 'Cuadrícula o lista de productos con varias opciones de visualización' },
+  text:         { label: 'Texto',                   icon: '📝', cats: ['Contenido'], desc: 'Contenido de texto enriquecido con opciones de formato' },
+  image:        { label: 'Imagen',                  icon: '🏞️', cats: ['Contenido', 'Multimedia'], desc: 'Imagen única con leyenda y opciones de enlace' },
+  carousel:     { label: 'Carrusel de Productos',   icon: '🎠', cats: ['Contenido', 'E-Commerce'], desc: 'Carrusel desplazable de productos seleccionados' },
+  bio:          { label: 'Biografía',               icon: '👤', cats: ['Sección de Presentación', 'Contenido'], desc: 'Sección de perfil con imagen y descripción' },
+  promo:        { label: 'Banner de Promociones',   icon: '🏷️', cats: ['Contenido', 'E-Commerce'], desc: 'Muestra ofertas y promociones destacadas' },
+  youtube:      { label: 'YouTube',                 icon: '▶️', cats: ['Contenido', 'Multimedia'], desc: 'Incorpora videos de YouTube' },
+  map:          { label: 'Mapa',                    icon: '📍', cats: ['Multimedia', 'Interactivo'], desc: 'Muestra una ubicación con Google Maps' },
+  form:         { label: 'Formulario',              icon: '📋', cats: ['Contenido', 'Interactivo'], desc: 'Crea formularios para recopilar consultas o datos' },
+  social:       { label: 'Iconos de Redes Sociales', icon: '🔗', cats: ['Contenido', 'Interactivo'], desc: 'Muestra íconos de tus redes sociales' },
+  cart:         { label: 'Botón de Carrito',        icon: '🛒', unique: true, cats: ['E-Commerce', 'Interactivo'], desc: 'Botón flotante para abrir el carrito de compras' },
+  links:        { label: 'Botones de Enlace',       icon: '🔘', cats: ['Contenido', 'Interactivo'], desc: 'Botones de enlaces personalizados con imágenes' },
+  fab:          { label: 'Botón Flotante',          icon: '💬', cats: ['Interactivo'], desc: 'Botón de acción flotante para WhatsApp, teléfono, correo, etc.' },
+  testimonials: { label: 'Testimonios',             icon: '⭐', cats: ['Contenido'], desc: 'Muestra reseñas y opiniones de tus clientes' },
+  faq:          { label: 'Preguntas Frecuentes',    icon: '❓', cats: ['Contenido', 'Interactivo'], desc: 'Lista de preguntas frecuentes con respuestas desplegables' },
+  gallery:      { label: 'Galería',                 icon: '🖼️', cats: ['Contenido', 'Multimedia'], desc: 'Galería de imágenes en cuadrícula, mosaico o carrusel' },
+  hours:        { label: 'Horario',                 icon: '🕒', cats: ['Contenido'], desc: 'Muestra tu horario de atención' },
+  footer:       { label: 'Pie de Página',           icon: '📄', cats: ['Contenido'], desc: 'Pie de página con enlaces, contacto y redes sociales' },
+  spacer:       { label: 'Espaciador',              icon: '➖', cats: ['Contenido'], desc: 'Agrega espacio o un separador entre bloques' },
+  bento:        { label: 'Bento de Características', icon: '🍱', cats: ['Contenido'], desc: 'Grilla de características con íconos y descripciones' },
+  stats:        { label: 'Estadísticas',            icon: '📊', cats: ['Contenido'], desc: 'Fila de cifras o métricas destacadas de tu negocio' },
+  pricing:      { label: 'Tabla de Precios',        icon: '💳', cats: ['Contenido', 'E-Commerce'], desc: 'Tabla de precios con planes y selector mensual/anual opcional' },
+  popup:        { label: 'Ventana Emergente',       icon: '🪟', cats: ['Contenido', 'Interactivo'], desc: 'Ventana emergente con disparador (carga, scroll, salida o clic)' },
 };
 
+export function createBlock(type) {
+  const base = { id: `b-${uid(8)}`, type, visible: true };
+  switch (type) {
+    case 'catalog':
+      return { ...base, template: 'list', showCategories: true, showSearch: true, showSortFilter: true, showTitle: true, showPrice: true, showDescription: true, showExternalLink: false, showCartButton: true };
+    case 'cart':
+      return { ...base, showCount: true, showTotal: true, sidePanel: false, position: 'bottom-right', size: 'md', animation: 'none', customColors: false, bgColor: '#4f46e5', iconColor: '#ffffff', labelColor: '#ffffff' };
+    case 'text':
+      return { ...base, content: 'Escribe aquí tu texto…', align: 'center', size: 'md', bold: false, italic: false, underline: false };
+    case 'image':
+      return { ...base, image: '', caption: '', link: '', alt: '' };
+    case 'carousel':
+      return { ...base, title: 'Destacados', categoryId: '', productIds: [], showPrice: true };
+    case 'bio':
+      return { ...base, image: '', name: 'Sobre nosotros', role: '', description: 'Cuéntales a tus clientes tu historia.', align: 'center' };
+    case 'promo':
+      return { ...base, badge: 'OFERTA', title: '¡Promoción especial!', subtitle: 'Aprovecha este descuento por tiempo limitado.', code: '', ctaText: 'Ver productos', ctaUrl: '#catalog', customColors: false, bgColor: '#ff758c', textColor: '#ffffff' };
+    case 'youtube':
+      return { ...base, title: '', url: '' };
+    case 'map':
+      return { ...base, title: 'Nuestra ubicación', query: '', height: 280 };
+    case 'form':
+      return { ...base, title: 'Contáctanos', description: 'Déjanos tu consulta y te respondemos pronto.', buttonText: 'Enviar por WhatsApp', fields: [{ label: 'Nombre', type: 'text', required: true }, { label: 'Teléfono o correo', type: 'text', required: true }, { label: 'Mensaje', type: 'textarea', required: true }] };
+    case 'social':
+      return { ...base, title: 'Síguenos', align: 'center', items: [{ network: 'instagram', url: '' }, { network: 'tiktok', url: '' }, { network: 'whatsapp', url: '' }] };
+    case 'links':
+      return { ...base, title: '', items: [{ title: 'Nuestro catálogo', subtitle: 'Explora todos los productos', url: '#catalog', image: '' }] };
+    case 'fab':
+      return { ...base, channel: 'whatsapp', value: '', message: 'Hola! Tengo una consulta', label: '', position: 'bottom-left', color: '#25d366' };
+    case 'testimonials':
+      return { ...base, title: 'Lo que dicen nuestros clientes', items: [{ author: 'Camila R.', role: 'Cliente verificada', rating: 5, text: 'Excelente atención y productos de primera calidad.' }] };
+    case 'faq':
+      return { ...base, title: 'Preguntas Frecuentes', items: [{ q: '¿Cómo realizo un pedido?', a: 'Agrega tus productos al carrito y confirma tu pedido por WhatsApp.' }] };
+    case 'gallery':
+      return { ...base, title: 'Galería', layout: 'grid', items: [] };
+    case 'hours':
+      return { ...base, title: 'Horario de atención', note: '', days: [
+        { day: 'Lunes', hours: '09:00 - 19:00', closed: false },
+        { day: 'Martes', hours: '09:00 - 19:00', closed: false },
+        { day: 'Miércoles', hours: '09:00 - 19:00', closed: false },
+        { day: 'Jueves', hours: '09:00 - 19:00', closed: false },
+        { day: 'Viernes', hours: '09:00 - 19:00', closed: false },
+        { day: 'Sábado', hours: '10:00 - 15:00', closed: false },
+        { day: 'Domingo', hours: '', closed: true },
+      ] };
+    case 'footer':
+      return { ...base, description: '', phone: '', email: '', address: '', copyright: '', links: [{ label: 'Inicio', url: '#top' }, { label: 'Catálogo', url: '#catalog' }] };
+    case 'spacer':
+      return { ...base, size: 'md', line: true };
+    case 'bento':
+      return { ...base, title: 'Por qué elegirnos', items: [
+        { icon: '✨', title: 'Calidad garantizada', desc: 'Productos seleccionados con los mejores estándares.' },
+        { icon: '🚀', title: 'Envío rápido', desc: 'Despachamos tus pedidos en tiempo récord.' },
+        { icon: '💬', title: 'Atención directa', desc: 'Te asesoramos por WhatsApp en cada paso.' },
+      ] };
+    case 'stats':
+      return { ...base, title: '', items: [
+        { value: '+500', label: 'Clientes felices' },
+        { value: '100%', label: 'Originales' },
+        { value: '24h', label: 'Despacho rápido' },
+      ] };
+    case 'pricing':
+      return { ...base, title: 'Planes y precios', showToggle: true, plans: [
+        { name: 'Básico', monthly: '$15', yearly: '$144', desc: 'Ideal para empezar', features: 'Beneficio 1\nBeneficio 2', ctaText: 'Elegir plan', ctaUrl: '', featured: false },
+        { name: 'Pro', monthly: '$29', yearly: '$278', desc: 'El más elegido', features: 'Todo lo del Básico\nBeneficio extra\nSoporte prioritario', ctaText: 'Elegir Pro', ctaUrl: '', featured: true },
+      ] };
+    case 'popup':
+      return { ...base, trigger: 'load', delay: 3, buttonLabel: 'Ver promoción', title: '¡Bienvenido!', text: 'Usa el código BIENVENIDO en tu primera compra.', image: '', ctaText: 'Explorar tienda', ctaUrl: '#catalog' };
+    default:
+      return base;
+  }
+}
+
+export function youtubeEmbedUrl(input) {
+  const s = String(input || '').trim();
+  if (!s) return '';
+  let id = '';
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) {
+    id = s;
+  } else {
+    try {
+      const u = new URL(s);
+      if (u.hostname.includes('youtu.be')) id = u.pathname.slice(1).split('/')[0];
+      else if (u.hostname.includes('youtube.com')) {
+        id = u.searchParams.get('v') || (u.pathname.match(/\/(?:embed|shorts|live)\/([a-zA-Z0-9_-]{11})/) || [])[1] || '';
+      }
+    } catch { return ''; }
+  }
+  return /^[a-zA-Z0-9_-]{11}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : '';
+}
+
+export function mapsEmbedUrl(input) {
+  const s = String(input || '').trim();
+  if (!s) return '';
+  return `https://maps.google.com/maps?q=${encodeURIComponent(s)}&output=embed`;
+}
+
 export const DEFAULT_DESIGN = {
-  palette: 'rosa',
-  colors: { primary: '#e0457b', secondary: '#fdeef2', text: '#c2185b' },
+  palette: 'sakura',
+  colors: { primary: '#ff758c', secondary: '#fff0f3', text: '#d4145a' },
   font: 'Poppins',
   corners: 'round',
   layout: 'list',
-  background: { type: 'color', image: '', overlay: 50, tint: 'dark' },
-  hero: { image: '', overlay: 50, tint: 'dark' },
+  background: { type: 'color', image: '', video: '', overlay: 50, tint: 'dark' },
+  hero: {
+    type: 'color', image: '', video: '', overlay: 40, tint: 'dark',
+    align: 'center', textColor: '#ffffff', fgImage: '',
+    ctaText: '', ctaType: 'url', ctaUrl: '', ctaBlock: '',
+    size: 'md', fullHeight: false,
+  },
   blocks: [
     { id: 'b-hero', type: 'hero', visible: true },
-    { id: 'b-catalog', type: 'catalog', visible: true },
-    { id: 'b-cart', type: 'cart', visible: true },
+    { id: 'b-catalog', type: 'catalog', visible: true, template: 'list', showCategories: true, showSearch: true, showSortFilter: true, showTitle: true, showPrice: true, showDescription: true, showExternalLink: false, showCartButton: true },
+    { id: 'b-cart', type: 'cart', visible: true, showCount: true, showTotal: true, sidePanel: false, position: 'bottom-right', size: 'md', animation: 'none', customColors: false },
   ],
 };
 

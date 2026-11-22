@@ -1,7 +1,7 @@
 // ===== FlowyMarket: tienda pública =====
 import {
   sb, esc, money, moneyText, safeUrl, safeLink, withDefaults, applyTheme, ORDER_TYPES, ADDRESS_FIELDS,
-  orderErrorMessage, waLink, validSelection,
+  orderErrorMessage, waLink, validSelection, youtubeEmbedUrl, mapsEmbedUrl,
 } from './common.js';
 
 const PREVIEW = new URLSearchParams(location.search).has('preview');
@@ -120,21 +120,51 @@ function visibleProducts() {
   return list;
 }
 
-function renderHero() {
+function heroActionHref(h) {
+  if (h.ctaType === 'scroll' && h.ctaBlock) return `#blk-${h.ctaBlock}`;
+  const raw = String(h.ctaUrl || '').trim();
+  if (raw.startsWith('#')) return raw;
+  return safeLink(raw);
+}
+
+function renderHero(b) {
   const { store, design } = state.cfg;
-  const img = safeUrl(design.hero.image);
-  const ov = Math.min(Math.max(Number(design.hero.overlay) || 0, 0), 90) / 100;
+  const h = design.hero || {};
+  const bgType = h.type || (h.image ? 'image' : 'color');
+  const img = bgType === 'image' ? safeUrl(h.image) : '';
+  const vid = bgType === 'video' ? safeUrl(h.video) : '';
+  const ov = Math.min(Math.max(Number(h.overlay) || 0, 0), 100) / 100;
   const logo = safeUrl(store.logo);
-  return `<header class="hero ${img ? 'has-image' : ''} ${design.hero.tint === 'light' ? 'tint-light' : ''}"
-      style="${img ? `background-image:url('${esc(img)}');` : ''}--ov:${img ? ov : 0}">
-    ${logo ? `<img class="hero-logo" src="${esc(logo)}" alt="">` : ''}
-    <h1>${esc(store.name)}</h1>
-    ${store.description ? `<p>${esc(store.description)}</p>` : ''}
+  const fgImg = safeUrl(h.fgImage);
+  const align = ['left', 'center', 'right'].includes(h.align) ? h.align : 'center';
+  const size = ['sm', 'md', 'lg', 'xl'].includes(h.size) ? h.size : 'md';
+  const textColor = /^#[0-9a-f]{6}$/i.test(h.textColor || '') ? h.textColor : '';
+  const ctaHref = h.ctaText ? heroActionHref(h) : '';
+  const isExt = ctaHref && !ctaHref.startsWith('#');
+  return `<header id="blk-${esc(b.id)}" class="hero hero-${size} align-${align} ${img ? 'has-image' : ''} ${vid ? 'has-video' : ''} ${h.fullHeight ? 'full-h' : ''} ${h.tint === 'light' ? 'tint-light' : ''}"
+      style="${img ? `background-image:url('${esc(img)}');` : ''}--ov:${(img || vid) ? ov : 0};${textColor ? `color:${esc(textColor)};` : ''}">
+    ${vid ? `<video class="hero-video" src="${esc(vid)}" autoplay muted loop playsinline></video>` : ''}
+    <div class="hero-inner">
+      ${logo ? `<img class="hero-logo" src="${esc(logo)}" alt="">` : ''}
+      <h1>${esc(store.name)}</h1>
+      ${store.description ? `<p>${esc(store.description)}</p>` : ''}
+      ${fgImg ? `<img class="hero-fg" src="${esc(fgImg)}" alt="">` : ''}
+      ${h.ctaText && ctaHref ? `<div class="hero-cta"><a class="btn" href="${esc(ctaHref)}" ${isExt ? 'target="_blank" rel="noopener"' : ''}>${esc(h.ctaText)}</a></div>` : ''}
+    </div>
   </header>`;
 }
 
-function renderCatalog() {
-  const layout = state.cfg.design.layout === 'grid' ? 'grid' : 'list';
+function renderCatalog(b = {}) {
+  const tpl = b.template || state.cfg.design.layout || 'list';
+  const layout = ['list', 'grid', 'glass', 'classic'].includes(tpl) ? tpl : 'list';
+  const showCats = b.showCategories !== false;
+  const showSearch = b.showSearch !== false;
+  const showTools = b.showSortFilter !== false;
+  const showTitle = b.showTitle !== false;
+  const showPrice = b.showPrice !== false;
+  const showDesc = b.showDescription !== false;
+  const showCartBtn = b.showCartButton !== false;
+
   const list = visibleProducts();
   const filtersOn = state.filter.min !== '' || state.filter.max !== '' || state.filter.offer;
   const groups = [];
@@ -154,34 +184,39 @@ function renderCatalog() {
 
   const card = (p) => {
     const soldout = p.stock === 0;
-    return `<button class="card ${soldout ? 'soldout' : ''}" data-product="${esc(p.id)}">
+    const canQuick = showCartBtn && p.cart && !soldout && !state.cfg.checkout.paused;
+    return `<div class="card ${soldout ? 'soldout' : ''}" role="button" tabindex="0" data-product="${esc(p.id)}">
       ${thumbHtml(p)}
       <div class="card-body">
-        <h3>${esc(p.title)}</h3>
-        ${p.description ? `<p>${esc(p.description)}</p>` : ''}
-        <div class="price">${priceHtml(p)}</div>
+        ${showTitle ? `<h3>${esc(p.title)}</h3>` : ''}
+        ${showDesc && p.description ? `<p>${esc(p.description)}</p>` : ''}
+        <div class="card-foot">
+          ${showPrice ? `<div class="price">${priceHtml(p)}</div>` : '<span></span>'}
+          ${canQuick ? `<button type="button" class="quick-add" data-quick-add="${esc(p.id)}" aria-label="Agregar ${esc(p.title)} al carrito">${ICON.cart}</button>` : ''}
+        </div>
       </div>
       ${soldout ? '<span class="badge gray">Agotado</span>' : p.offer != null && Number(p.offer) < Number(p.price) ? '<span class="badge">Oferta</span>' : ''}
-    </button>`;
+    </div>`;
   };
 
+  const hasBar = showCats || showSearch || showTools;
   return `<section class="catalog" id="catalog">
-    <div class="catbar">
-      <div class="catbar-row">
-        <button class="icon-btn" data-act="menu" aria-label="Categorías">${ICON.menu}</button>
-        <button class="icon-btn" data-act="search" aria-label="Buscar">${ICON.search}</button>
-        <nav class="chips" aria-label="Categorías">
+    ${hasBar ? `<div class="catbar">
+      ${(showCats || showSearch) ? `<div class="catbar-row">
+        ${showCats ? `<button class="icon-btn" data-act="menu" aria-label="Categorías">${ICON.menu}</button>` : ''}
+        ${showSearch ? `<button class="icon-btn" data-act="search" aria-label="Buscar">${ICON.search}</button>` : ''}
+        ${showCats ? `<nav class="chips" aria-label="Categorías">
           ${chips.map((c) => `<button class="chip ${c.id === active ? 'active' : ''}" data-cat="${esc(c.id)}">${esc(c.name)}</button>`).join('')}
-        </nav>
-      </div>
-      <div class="searchbox ${state.searchOpen || state.query ? 'open' : ''}">
+        </nav>` : ''}
+      </div>` : ''}
+      ${showSearch ? `<div class="searchbox ${state.searchOpen || state.query ? 'open' : ''}">
         <input type="search" id="q" placeholder="Buscar productos…" value="${esc(state.query)}" autocomplete="off">
-      </div>
-      <div class="tools">
+      </div>` : ''}
+      ${showTools ? `<div class="tools">
         <button class="pill ${state.sort !== 'default' ? 'on' : ''}" data-act="sort">${ICON.sort} Ordenar</button>
         <button class="pill ${filtersOn ? 'on' : ''}" data-act="filter">${ICON.filter} Filtrar</button>
-      </div>
-    </div>
+      </div>` : ''}
+    </div>` : ''}
     ${groups.length ? groups.map((g) => `
       <div class="cat-section" id="cat-${esc(g.id)}" data-section="${esc(g.id)}">
         ${g.name ? `<h2 class="cat-title">${esc(g.name)}</h2>` : ''}
@@ -190,65 +225,346 @@ function renderCatalog() {
   </section>`;
 }
 
+const SOCIAL_META = {
+  instagram: { label: 'Instagram', icon: '📸' },
+  tiktok:    { label: 'TikTok',    icon: '🎵' },
+  facebook:  { label: 'Facebook',  icon: '📘' },
+  x:         { label: 'X',         icon: '✖️' },
+  youtube:   { label: 'YouTube',   icon: '▶️' },
+  whatsapp:  { label: 'WhatsApp',  icon: '💬' },
+  email:     { label: 'Correo',    icon: '✉️' },
+  web:       { label: 'Web',       icon: '🌐' },
+};
+
+function safeActionHref(u) {
+  const s = String(u || '').trim();
+  if (!s) return '';
+  if (s.startsWith('#')) return s;
+  if (s.startsWith('mailto:') || s.startsWith('tel:')) return s;
+  return safeLink(s);
+}
+
 function renderBlock(b) {
   if (b.visible === false) return '';
+  const id = `blk-${esc(b.id)}`;
   switch (b.type) {
-    case 'hero': return renderHero();
-    case 'catalog': return renderCatalog();
-    case 'text': return b.content ? `<section class="block-text">${esc(b.content)}</section>` : '';
+    case 'hero': return renderHero(b);
+    case 'catalog': return `<div id="${id}">${renderCatalog(b)}</div>`;
+    case 'text': {
+      if (!b.content) return '';
+      const align = ['left', 'center', 'right', 'justify'].includes(b.align) ? b.align : 'center';
+      const sz = ['sm', 'md', 'lg'].includes(b.size) ? b.size : 'md';
+      const cls = `block-text align-${align} sz-${sz}${b.bold ? ' is-bold' : ''}${b.italic ? ' is-italic' : ''}${b.underline ? ' is-under' : ''}`;
+      return `<section id="${id}" class="${cls}">${esc(b.content)}</section>`;
+    }
     case 'image': {
       const src = safeUrl(b.image);
       if (!src) return '';
       const img = `<img src="${esc(src)}" alt="${esc(b.alt || '')}" loading="lazy">`;
-      const href = safeLink(b.link);
-      return `<section class="block-image">${href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${img}</a>` : img}</section>`;
+      const href = safeActionHref(b.link);
+      const isExt = href && !href.startsWith('#');
+      return `<section id="${id}" class="block-image">${href ? `<a href="${esc(href)}" ${isExt ? 'target="_blank" rel="noopener"' : ''}>${img}</a>` : img}${b.caption ? `<p class="img-cap">${esc(b.caption)}</p>` : ''}</section>`;
+    }
+    case 'carousel': {
+      const items = (b.categoryId ? state.prods.filter((p) => p.category_id === b.categoryId) : state.prods).slice(0, 16);
+      if (!items.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="prod-carousel">${items.map((p) => `<div class="car-card" role="button" tabindex="0" data-product="${esc(p.id)}">
+          ${thumbHtml(p)}
+          <div class="car-body"><b>${esc(p.title)}</b>${b.showPrice !== false ? `<div class="price">${priceHtml(p)}</div>` : ''}</div>
+        </div>`).join('')}</div>
+      </section>`;
+    }
+    case 'bio': {
+      const img = safeUrl(b.image);
+      const align = b.align === 'left' ? 'left' : 'center';
+      return `<section id="${id}" class="block-sec block-bio align-${align}">
+        ${img ? `<img class="bio-img" src="${esc(img)}" alt="${esc(b.name || '')}" loading="lazy">` : ''}
+        <div class="bio-text">
+          ${b.name ? `<h2>${esc(b.name)}</h2>` : ''}
+          ${b.role ? `<div class="bio-role">${esc(b.role)}</div>` : ''}
+          ${b.description ? `<p>${esc(b.description)}</p>` : ''}
+        </div>
+      </section>`;
+    }
+    case 'promo': {
+      const style = b.customColors && /^#[0-9a-f]{6}$/i.test(b.bgColor || '') && /^#[0-9a-f]{6}$/i.test(b.textColor || '')
+        ? `background:${esc(b.bgColor)};color:${esc(b.textColor)};` : '';
+      const href = safeActionHref(b.ctaUrl);
+      const isExt = href && !href.startsWith('#');
+      return `<section id="${id}" class="block-sec"><div class="promo-card" style="${style}">
+        ${b.badge ? `<span class="promo-badge">${esc(b.badge)}</span>` : ''}
+        ${b.title ? `<h3>${esc(b.title)}</h3>` : ''}
+        ${b.subtitle ? `<p>${esc(b.subtitle)}</p>` : ''}
+        <div class="promo-actions">
+          ${b.code ? `<button type="button" class="promo-code" data-copy="${esc(b.code)}">🏷️ ${esc(b.code)} · Copiar</button>` : ''}
+          ${b.ctaText && href ? `<a class="btn" href="${esc(href)}" ${isExt ? 'target="_blank" rel="noopener"' : ''}>${esc(b.ctaText)}</a>` : ''}
+        </div>
+      </div></section>`;
+    }
+    case 'youtube': {
+      const embed = youtubeEmbedUrl(b.url);
+      if (!embed) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="embed-16x9"><iframe src="${esc(embed)}" title="${esc(b.title || 'YouTube')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+      </section>`;
+    }
+    case 'map': {
+      const embed = mapsEmbedUrl(b.query);
+      if (!embed) return '';
+      const h = Math.min(Math.max(Number(b.height) || 280, 180), 500);
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="map-box" style="height:${h}px"><iframe src="${esc(embed)}" title="${esc(b.title || 'Mapa')}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+      </section>`;
+    }
+    case 'form': {
+      const fields = Array.isArray(b.fields) ? b.fields : [];
+      if (!fields.length) return '';
+      return `<section id="${id}" class="block-sec"><form class="blk-form" data-blk-form="${esc(b.id)}">
+        ${b.title ? `<h2 class="sec-title" style="padding:0;margin-bottom:6px">${esc(b.title)}</h2>` : ''}
+        ${b.description ? `<p class="muted" style="margin:0 0 14px">${esc(b.description)}</p>` : ''}
+        ${fields.map((f, fi) => `<div class="field">
+          <label>${esc(f.label || `Campo ${fi + 1}`)}${f.required ? ' *' : ''}</label>
+          ${f.type === 'textarea'
+            ? `<textarea name="f${fi}" rows="3" ${f.required ? 'required' : ''}></textarea>`
+            : `<input type="${['email', 'tel'].includes(f.type) ? f.type : 'text'}" name="f${fi}" ${f.required ? 'required' : ''}>`}
+        </div>`).join('')}
+        <button type="submit" class="btn block">${esc(b.buttonText || 'Enviar')}</button>
+      </form></section>`;
+    }
+    case 'social': {
+      const items = (Array.isArray(b.items) ? b.items : []).filter((it) => it.url);
+      if (!items.length) return '';
+      const align = ['left', 'center', 'right'].includes(b.align) ? b.align : 'center';
+      return `<section id="${id}" class="block-sec align-${align}">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="social-row justify-${align}">${items.map((it) => {
+          const meta = SOCIAL_META[it.network] || SOCIAL_META.web;
+          let href = String(it.url || '').trim();
+          if (it.network === 'email' && !href.startsWith('mailto:')) href = `mailto:${href}`;
+          else if (it.network === 'whatsapp' && !/^https?:/i.test(href)) href = waLink(href, 'Hola!');
+          else href = safeActionHref(href);
+          if (!href) return '';
+          return `<a class="social-pill" href="${esc(href)}" target="_blank" rel="noopener"><span>${meta.icon}</span><span>${esc(meta.label)}</span></a>`;
+        }).join('')}</div>
+      </section>`;
+    }
+    case 'links': {
+      const items = (Array.isArray(b.items) ? b.items : []).filter((it) => it.title);
+      if (!items.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="link-list">${items.map((it) => {
+          const href = safeActionHref(it.url) || '#';
+          const isExt = href !== '#' && !href.startsWith('#');
+          const img = safeUrl(it.image);
+          return `<a class="link-card" href="${esc(href)}" ${isExt ? 'target="_blank" rel="noopener"' : ''}>
+            ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}
+            <div class="link-info"><b>${esc(it.title)}</b>${it.subtitle ? `<small>${esc(it.subtitle)}</small>` : ''}</div>
+            <span class="link-arr">→</span>
+          </a>`;
+        }).join('')}</div>
+      </section>`;
+    }
+    case 'testimonials': {
+      const items = Array.isArray(b.items) ? b.items : [];
+      if (!items.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="test-grid">${items.map((it) => `<article class="test-card">
+          <div class="stars">${'★'.repeat(Math.min(5, Math.max(1, Number(it.rating) || 5)))}</div>
+          <p>“${esc(it.text || '')}”</p>
+          <div class="test-auth"><b>${esc(it.author || '')}</b>${it.role ? `<small>${esc(it.role)}</small>` : ''}</div>
+        </article>`).join('')}</div>
+      </section>`;
+    }
+    case 'faq': {
+      const items = Array.isArray(b.items) ? b.items : [];
+      if (!items.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="faq-list">${items.map((it) => `<details class="faq-item"><summary>${esc(it.q || '')}</summary><p>${esc(it.a || '')}</p></details>`).join('')}</div>
+      </section>`;
+    }
+    case 'gallery': {
+      const items = (Array.isArray(b.items) ? b.items : []).filter((it) => safeUrl(it.url));
+      if (!items.length) return '';
+      const lay = ['grid', 'masonry', 'carousel'].includes(b.layout) ? b.layout : 'grid';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="gal-wrap gal-${lay}">${items.map((it) => `<figure class="gal-item"><img src="${esc(safeUrl(it.url))}" alt="${esc(it.caption || '')}" loading="lazy">${it.caption ? `<figcaption>${esc(it.caption)}</figcaption>` : ''}</figure>`).join('')}</div>
+      </section>`;
+    }
+    case 'hours': {
+      const days = Array.isArray(b.days) ? b.days : [];
+      if (!days.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="hours-card">${days.map((dy) => `<div class="hours-row"><b>${esc(dy.day)}</b><span class="${dy.closed ? 'muted' : ''}">${dy.closed ? 'Cerrado' : esc(dy.hours || '—')}</span></div>`).join('')}
+        ${b.note ? `<p class="muted" style="margin:10px 0 0">${esc(b.note)}</p>` : ''}</div>
+      </section>`;
+    }
+    case 'footer': {
+      const links = (Array.isArray(b.links) ? b.links : []).filter((l) => l.label);
+      return `<footer id="${id}" class="block-footer">
+        ${b.description ? `<p class="bf-desc">${esc(b.description)}</p>` : ''}
+        ${(b.phone || b.email || b.address) ? `<div class="bf-contact">
+          ${b.phone ? `<span>📞 ${esc(b.phone)}</span>` : ''}
+          ${b.email ? `<span>✉️ ${esc(b.email)}</span>` : ''}
+          ${b.address ? `<span>📍 ${esc(b.address)}</span>` : ''}
+        </div>` : ''}
+        ${links.length ? `<nav class="bf-links">${links.map((l) => {
+          const href = safeActionHref(l.url) || '#';
+          return `<a href="${esc(href)}" ${!href.startsWith('#') ? 'target="_blank" rel="noopener"' : ''}>${esc(l.label)}</a>`;
+        }).join('')}</nav>` : ''}
+        <div class="bf-copy">${esc(b.copyright || `© ${new Date().getFullYear()} ${state.cfg.store.name}`)}</div>
+      </footer>`;
+    }
+    case 'spacer':
+    case 'divider': {
+      const sz = ['sm', 'md', 'lg'].includes(b.size) ? b.size : 'md';
+      const showLine = b.type === 'divider' ? true : b.line !== false;
+      return `<div id="${id}" class="block-spacer sp-${sz}">${showLine ? '<hr>' : ''}</div>`;
+    }
+    case 'bento': {
+      const items = Array.isArray(b.items) ? b.items : [];
+      if (!items.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="bento-grid">${items.map((it) => `<div class="bento-card">
+          ${it.icon ? `<div class="bento-ic">${esc(it.icon)}</div>` : ''}
+          <b>${esc(it.title || '')}</b>
+          ${it.desc ? `<p>${esc(it.desc)}</p>` : ''}
+        </div>`).join('')}</div>
+      </section>`;
+    }
+    case 'stats': {
+      const items = Array.isArray(b.items) ? b.items : [];
+      if (!items.length) return '';
+      return `<section id="${id}" class="block-sec">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        <div class="stats-strip">${items.map((it) => `<div class="stat-box"><b>${esc(it.value || '')}</b><span>${esc(it.label || '')}</span></div>`).join('')}</div>
+      </section>`;
+    }
+    case 'pricing': {
+      const plans = Array.isArray(b.plans) ? b.plans : [];
+      if (!plans.length) return '';
+      return `<section id="${id}" class="block-sec" data-pricing-block="${esc(b.id)}">
+        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
+        ${b.showToggle !== false ? `<div class="price-toggle"><button type="button" class="active" data-bill="monthly">Mensual</button><button type="button" data-bill="yearly">Anual</button></div>` : ''}
+        <div class="pricing-grid">${plans.map((pl) => {
+          const feats = String(pl.features || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+          const href = safeActionHref(pl.ctaUrl);
+          return `<div class="plan-card ${pl.featured ? 'featured' : ''}">
+            <h3>${esc(pl.name || '')}</h3>
+            <div class="plan-price" data-m="${esc(pl.monthly || '')}" data-y="${esc(pl.yearly || pl.monthly || '')}">${esc(pl.monthly || '')}</div>
+            ${pl.desc ? `<p class="muted">${esc(pl.desc)}</p>` : ''}
+            ${feats.length ? `<ul>${feats.map((f) => `<li>✓ ${esc(f)}</li>`).join('')}</ul>` : ''}
+            ${pl.ctaText ? (href ? `<a class="btn block" href="${esc(href)}" ${!href.startsWith('#') ? 'target="_blank" rel="noopener"' : ''}>${esc(pl.ctaText)}</a>` : `<button type="button" class="btn block">${esc(pl.ctaText)}</button>`) : ''}
+          </div>`;
+        }).join('')}</div>
+      </section>`;
+    }
+    case 'popup': {
+      if (b.trigger === 'button') {
+        return `<section id="${id}" class="block-sec" style="text-align:center"><button type="button" class="btn" data-open-popup="${esc(b.id)}">${esc(b.buttonLabel || 'Ver promoción')}</button></section>`;
+      }
+      return '';
     }
     case 'whatsapp': {
       const num = state.cfg.store.whatsapp;
       if (!num) return '';
-      return `<section class="block-wa"><a class="btn wa" href="${esc(waLink(num, b.message || 'Hola! Tengo una consulta'))}" target="_blank" rel="noopener">${ICON.wa} ${esc(b.label || 'Escríbenos por WhatsApp')}</a></section>`;
+      return `<section id="${id}" class="block-wa"><a class="btn wa" href="${esc(waLink(num, b.message || 'Hola! Tengo una consulta'))}" target="_blank" rel="noopener">${ICON.wa} ${esc(b.label || 'Escríbenos por WhatsApp')}</a></section>`;
     }
-    case 'divider': return '<div class="block-divider"></div>';
     default: return '';
   }
+}
+
+function getCartBlock() {
+  return (state.cfg.design.blocks || []).find((b) => b.type === 'cart' && b.visible !== false) || null;
+}
+
+function cartFabHtml() {
+  const cb = getCartBlock();
+  if (!cb || cartCount() === 0) return '';
+  const pos = ['bottom-right', 'bottom-left', 'top-right', 'top-left', 'middle-right', 'middle-left'].includes(cb.position) ? cb.position : 'bottom-right';
+  const sz = ['sm', 'md', 'lg'].includes(cb.size) ? cb.size : 'md';
+  const anim = ['none', 'pulse', 'bounce', 'scale'].includes(cb.animation) ? cb.animation : 'none';
+  const showTotal = cb.showTotal !== false;
+  const showCount = cb.showCount !== false;
+  let style = '';
+  if (cb.customColors) {
+    if (/^#[0-9a-f]{6}$/i.test(cb.bgColor || '')) style += `background:${cb.bgColor};`;
+    if (/^#[0-9a-f]{6}$/i.test(cb.iconColor || '')) style += `--fab-ic:${cb.iconColor};`;
+    if (/^#[0-9a-f]{6}$/i.test(cb.labelColor || '')) style += `color:${cb.labelColor};`;
+  }
+  return `<button class="cart-fab pos-${pos} sz-${sz} anim-${anim} ${showTotal ? 'with-total' : ''}" style="${style}" data-act="cart" aria-label="Ver carrito">
+    <span class="fab-ic">${ICON.cart}</span>
+    ${showTotal ? `<span class="fab-total">${money(cartSubtotal(), cur())}</span>` : ''}
+    ${showCount ? `<span class="count">${cartCount()}</span>` : ''}
+  </button>`;
+}
+
+function renderFabs() {
+  const fabs = (state.cfg.design.blocks || []).filter((b) => b.type === 'fab' && b.visible !== false);
+  return fabs.map((b) => {
+    const ch = b.channel || 'whatsapp';
+    const val = b.value || (ch === 'whatsapp' ? state.cfg.store.whatsapp : '');
+    let href = '';
+    let ic = '💬';
+    if (ch === 'whatsapp' && val) { href = waLink(val, b.message || 'Hola!'); ic = ICON.wa; }
+    else if (ch === 'phone' && val) { href = `tel:${val.replace(/[^+\d]/g, '')}`; ic = '📞'; }
+    else if (ch === 'email' && val) { href = `mailto:${val}`; ic = '✉️'; }
+    else if (ch === 'url') { href = safeLink(val); ic = '🔗'; }
+    if (!href) return '';
+    const pos = ['bottom-left', 'bottom-right', 'top-left', 'top-right'].includes(b.position) ? b.position : 'bottom-left';
+    const bg = /^#[0-9a-f]{6}$/i.test(b.color || '') ? `background:${b.color};` : '';
+    return `<a class="contact-fab pos-${pos} ${b.label ? 'has-lbl' : ''}" style="${bg}" href="${esc(href)}" target="_blank" rel="noopener" aria-label="${esc(b.label || ch)}">${ic}${b.label ? `<span>${esc(b.label)}</span>` : ''}</a>`;
+  }).join('');
 }
 
 function render() {
   const { store, design, checkout } = state.cfg;
   applyTheme(design);
   document.title = store.name || 'Tienda';
-  const bgImg = design.background.type === 'image' ? safeUrl(design.background.image) : '';
-  document.body.classList.toggle('has-bg-image', !!bgImg);
+  const bg = design.background || {};
+  const bgImg = bg.type === 'image' ? safeUrl(bg.image) : '';
+  const bgVid = bg.type === 'video' ? safeUrl(bg.video) : '';
+  document.body.classList.toggle('has-bg-image', !!bgImg || !!bgVid);
+  const ovRgb = bg.tint === 'light' ? '255,255,255' : '0,0,0';
+  const ovAlpha = (Number(bg.overlay) || 0) / 100;
   document.body.style.backgroundImage = bgImg
-    ? `linear-gradient(rgba(${design.background.tint === 'light' ? '255,255,255' : '0,0,0'},${(Number(design.background.overlay) || 0) / 100}),rgba(${design.background.tint === 'light' ? '255,255,255' : '0,0,0'},${(Number(design.background.overlay) || 0) / 100})),url('${bgImg.replace(/'/g, '%27')}')`
+    ? `linear-gradient(rgba(${ovRgb},${ovAlpha}),rgba(${ovRgb},${ovAlpha})),url('${bgImg.replace(/'/g, '%27')}')`
     : '';
 
   const blocks = design.blocks || [];
-  const showCart = blocks.some((b) => b.type === 'cart' && b.visible !== false);
+  const hasCustomFooter = blocks.some((b) => b.type === 'footer' && b.visible !== false);
   const scroll = window.scrollY;
   $('#app').innerHTML = `
+    ${bgVid ? `<div class="bg-video-wrap"><video src="${esc(bgVid)}" autoplay muted loop playsinline></video><div style="background:rgba(${ovRgb},${ovAlpha})"></div></div>` : ''}
     ${PREVIEW ? '<div class="banner-preview">Vista previa · los cambios aún no están publicados</div>' : ''}
     ${checkout.paused ? '<div class="banner-paused">La tienda no está recibiendo pedidos en este momento.</div>' : ''}
-    <div class="page">
+    <div class="page" id="top">
       ${blocks.map(renderBlock).join('')}
-      <footer class="footer">© ${new Date().getFullYear()} ${esc(store.name)}</footer>
+      ${hasCustomFooter ? '' : `<footer class="footer">© ${new Date().getFullYear()} ${esc(store.name)}</footer>`}
     </div>
-    ${showCart && cartCount() > 0 ? `<button class="cart-fab" data-act="cart" aria-label="Ver carrito">${ICON.cart}<span class="count">${cartCount()}</span></button>` : ''}`;
+    ${renderFabs()}
+    ${cartFabHtml()}`;
   window.scrollTo(0, scroll);
   setupScrollSpy();
+  setupPopups();
 }
 
 function updateCartFab(bump) {
-  const blocks = state.cfg.design.blocks || [];
-  const showCart = blocks.some((b) => b.type === 'cart' && b.visible !== false);
-  let fab = $('.cart-fab');
-  if (!showCart || cartCount() === 0) { fab?.remove(); return; }
-  if (!fab) {
-    $('#app').insertAdjacentHTML('beforeend', `<button class="cart-fab" data-act="cart" aria-label="Ver carrito">${ICON.cart}<span class="count"></span></button>`);
-    fab = $('.cart-fab');
-  }
-  fab.querySelector('.count').textContent = cartCount();
-  if (bump) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
+  $('.cart-fab')?.remove();
+  const html = cartFabHtml();
+  if (!html) return;
+  $('#app').insertAdjacentHTML('beforeend', html);
+  const fab = $('.cart-fab');
+  if (bump && fab) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
 }
 
 // Resalta la categoría visible al hacer scroll
@@ -390,7 +706,9 @@ function openProduct(id) {
       <button class="btn" data-add>Agregar · <span data-total></span></button>
     </div>` : ''}`;
 
+  const sideCls = getCartBlock()?.sidePanel ? 'side-panel' : '';
   openSheet(html, {
+    cls: sideCls,
     onMount: (s) => {
       if (!canBuy) return;
       const selection = () => {
@@ -451,12 +769,14 @@ function openCart() {
       </div>
     </div>`;
   }).join('');
+  const sideCls = getCartBlock()?.sidePanel ? 'side-panel' : '';
   openSheet(`${head('Tu pedido')}
     <div class="sheet-body">${lines}
       <div class="totals"><div class="grand"><span>Subtotal</span><span>${money(cartSubtotal(), cur())}</span></div></div>
       <p class="muted">El envío, los impuestos y los descuentos se calculan al confirmar.</p>
     </div>
     <div class="sheet-foot"><button class="btn block" data-checkout ${state.cfg.checkout.paused ? 'disabled' : ''}>Continuar</button></div>`, {
+    cls: sideCls,
     onMount: (s) => {
       s.querySelectorAll('[data-line]').forEach((b) => (b.onclick = () => {
         const l = state.cart[Number(b.dataset.line)];
@@ -511,7 +831,9 @@ function openCheckout() {
   </form>
   <div class="sheet-foot"><button class="btn block" data-send>${PREVIEW ? 'Vista previa: pedidos desactivados' : 'Confirmar pedido'}</button></div>`;
 
+  const sideCls = getCartBlock()?.sidePanel ? 'side-panel' : '';
   openSheet(html, {
+    cls: sideCls,
     onMount: (s) => {
       const form = s.querySelector('#ckform');
       const syncType = () => {
@@ -606,9 +928,93 @@ function showDone(o, customer, address) {
   if (link) window.open(link, '_blank', 'noopener');
 }
 
+// ---------- Acciones rápidas, Popups y Formularios ----------
+function quickAdd(id) {
+  const p = prodById(id);
+  if (!p || !p.cart || p.stock === 0 || state.cfg.checkout.paused) return;
+  const opts = Array.isArray(p.options) ? p.options : [];
+  if (opts.some((g) => g.required && (g.items || []).some((i) => i.available !== false))) {
+    openProduct(id);
+    return;
+  }
+  const key = JSON.stringify([p.id, [], '']);
+  const existing = state.cart.find((l) => JSON.stringify([l.id, l.sel, l.note || '']) === key);
+  const max = p.stock < 99999 ? p.stock : 999;
+  if (existing) existing.q = Math.min(existing.q + 1, max);
+  else state.cart.push({ id: p.id, q: 1, sel: [], note: '' });
+  saveCart();
+  updateCartFab(true);
+  toast('Agregado al carrito');
+}
+
+const popupsShown = new Set();
+let popupCleanups = [];
+function openPopupBlock(id) {
+  const b = (state.cfg.design.blocks || []).find((x) => x.id === id && x.type === 'popup');
+  if (!b) return;
+  const img = safeUrl(b.image);
+  const href = safeActionHref(b.ctaUrl);
+  const isExt = href && !href.startsWith('#');
+  openSheet(`${head(b.title || 'Aviso')}
+    <div class="sheet-body" style="text-align:center">
+      ${img ? `<img src="${esc(img)}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:var(--radius);margin-bottom:14px">` : ''}
+      ${b.text ? `<p style="white-space:pre-line;line-height:1.5">${esc(b.text)}</p>` : ''}
+    </div>
+    ${b.ctaText && href ? `<div class="sheet-foot"><a class="btn block" href="${esc(href)}" ${isExt ? 'target="_blank" rel="noopener"' : 'data-x'}>${esc(b.ctaText)}</a></div>` : ''}`);
+}
+
+function setupPopups() {
+  popupCleanups.forEach((fn) => fn());
+  popupCleanups = [];
+  if (PREVIEW) return;
+  const popups = (state.cfg.design.blocks || []).filter((b) => b.type === 'popup' && b.visible !== false);
+  for (const b of popups) {
+    if (popupsShown.has(b.id) || b.trigger === 'button') continue;
+    const fire = () => { if (popupsShown.has(b.id)) return; popupsShown.add(b.id); openPopupBlock(b.id); };
+    if (!b.trigger || b.trigger === 'load') {
+      const t = setTimeout(fire, Math.max(0, Number(b.delay) || 3) * 1000);
+      popupCleanups.push(() => clearTimeout(t));
+    } else if (b.trigger === 'scroll') {
+      const onScroll = () => {
+        if ((window.scrollY + window.innerHeight) / Math.max(1, document.body.scrollHeight) >= 0.5) {
+          window.removeEventListener('scroll', onScroll);
+          fire();
+        }
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      popupCleanups.push(() => window.removeEventListener('scroll', onScroll));
+    } else if (b.trigger === 'exit') {
+      const onLeave = (e) => {
+        if (e.clientY <= 0) { document.removeEventListener('mouseleave', onLeave); fire(); }
+      };
+      document.addEventListener('mouseleave', onLeave);
+      popupCleanups.push(() => document.removeEventListener('mouseleave', onLeave));
+    }
+  }
+}
+
 // ---------- Eventos ----------
 document.addEventListener('click', (e) => {
   if (e.target.closest('#overlay-root')) return;
+  const qa = e.target.closest('[data-quick-add]');
+  if (qa) { e.stopPropagation(); return quickAdd(qa.dataset.quickAdd); }
+  const cp = e.target.closest('[data-copy]');
+  if (cp) {
+    navigator.clipboard?.writeText(cp.dataset.copy).catch(() => {});
+    toast(`Código "${cp.dataset.copy}" copiado`);
+    return;
+  }
+  const bill = e.target.closest('[data-bill]');
+  if (bill) {
+    const sec = bill.closest('[data-pricing-block]');
+    const mode = bill.dataset.bill;
+    sec.querySelectorAll('[data-bill]').forEach((x) => x.classList.toggle('active', x === bill));
+    sec.querySelectorAll('.plan-price').forEach((el) => (el.textContent = mode === 'yearly' ? el.dataset.y : el.dataset.m));
+    return;
+  }
+  const pop = e.target.closest('[data-open-popup]');
+  if (pop) return openPopupBlock(pop.dataset.openPopup);
+
   const t = e.target.closest('[data-act],[data-cat],[data-product]');
   if (!t) return;
   if (t.dataset.product) return openProduct(t.dataset.product);
@@ -624,6 +1030,23 @@ document.addEventListener('click', (e) => {
     case 'filter': return openFilter();
     case 'cart': return openCart();
   }
+});
+
+document.addEventListener('submit', (e) => {
+  const form = e.target.closest('[data-blk-form]');
+  if (!form) return;
+  e.preventDefault();
+  const b = (state.cfg.design.blocks || []).find((x) => x.id === form.dataset.blkForm);
+  if (!b) return;
+  const lines = [`*${b.title || 'Consulta'}* — ${state.cfg.store.name}`, ''];
+  (b.fields || []).forEach((f, fi) => {
+    const val = form.querySelector(`[name="f${fi}"]`)?.value.trim() || '';
+    if (val) lines.push(`${f.label || `Campo ${fi + 1}`}: ${val}`);
+  });
+  const num = state.cfg.store.whatsapp;
+  if (num && !PREVIEW) window.open(waLink(num, lines.join('\n')), '_blank', 'noopener');
+  else toast('¡Formulario enviado!');
+  form.reset();
 });
 
 let qTimer;
