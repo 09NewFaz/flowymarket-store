@@ -289,7 +289,7 @@ export const DEFAULT_DESIGN = {
   ],
 };
 
-export const DEFAULT_STORE = { name: 'Mi tienda', description: '', whatsapp: '', currency: '$', logo: '' };
+export const DEFAULT_STORE = { name: 'Mi tienda', description: '', whatsapp: '', currency: '$', logo: '', favicon: '' };
 
 export function withDefaults(cfg = {}) {
   const d = cfg.design || {};

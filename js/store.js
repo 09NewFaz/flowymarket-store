@@ -636,9 +636,14 @@ function render() {
   const { store, design, checkout } = state.cfg;
   applyTheme(design);
   document.title = store.name || 'Tienda';
-  const logoUrl = safeUrl(store.logo);
-  const fav = document.querySelector('link[rel="icon"]');
-  if (fav && logoUrl) fav.href = logoUrl;
+  const favUrl = safeUrl(store.favicon || store.logo);
+  if (favUrl && !PREVIEW) {
+    document.querySelectorAll('link[rel*="icon"]').forEach((l) => l.remove());
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.href = favUrl;
+    document.head.appendChild(link);
+  }
   const bg = design.background || {};
   const bgImg = bg.type === 'image' ? safeUrl(bg.image) : '';
   const bgVid = bg.type === 'video' ? safeUrl(bg.video) : '';
