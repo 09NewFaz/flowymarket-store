@@ -23,17 +23,17 @@ export { BUCKET };
 export const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** Devuelve HTML seguro: el símbolo de moneda lo escribe el admin y se escapa. */
+/** Devuelve HTML seguro: formato CLP (sin decimales, miles con punto). El símbolo lo escribe el admin y se escapa. */
 export function money(n, currency = '$') {
-  const v = Number(n) || 0;
-  const s = v.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const v = Math.round(Number(n) || 0);
+  const s = v.toLocaleString('es-CL', { maximumFractionDigits: 0 });
   return `${esc(currency)}${s}`;
 }
 
 /** Igual que money() pero en texto plano (para mensajes de WhatsApp, no HTML). */
 export function moneyText(n, currency = '$') {
-  const v = Number(n) || 0;
-  return `${currency}${v.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const v = Math.round(Number(n) || 0);
+  return `${currency}${v.toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 }
 
 /** id compatible con la restricción ^[a-z0-9]{1,24}$ */
