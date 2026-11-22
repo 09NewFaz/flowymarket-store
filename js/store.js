@@ -88,9 +88,9 @@ function toast(msg) {
   toastTimer = setTimeout(() => (t.hidden = true), 2600);
 }
 
-function thumbHtml(p) {
+function thumbHtml(p, overlay = '') {
   const src = safeUrl(p?.img);
-  return `<div class="thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : ICON.tag}</div>`;
+  return `<div class="thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : ICON.tag}${overlay}</div>`;
 }
 function priceHtml(p) {
   const hasOffer = p.offer != null && Number(p.offer) < Number(p.price);
@@ -185,8 +185,9 @@ function renderCatalog(b = {}) {
   const card = (p) => {
     const soldout = p.stock === 0;
     const canQuick = showCartBtn && p.cart && !soldout && !state.cfg.checkout.paused;
+    const badge = soldout ? '<span class="badge gray">Agotado</span>' : p.offer != null && Number(p.offer) < Number(p.price) ? '<span class="badge">Oferta</span>' : '';
     return `<div class="card ${soldout ? 'soldout' : ''}" role="button" tabindex="0" data-product="${esc(p.id)}">
-      ${thumbHtml(p)}
+      ${thumbHtml(p, badge)}
       <div class="card-body">
         ${showTitle ? `<h3>${esc(p.title)}</h3>` : ''}
         ${showDesc && p.description ? `<p>${esc(p.description)}</p>` : ''}
@@ -195,7 +196,6 @@ function renderCatalog(b = {}) {
           ${canQuick ? `<button type="button" class="quick-add" data-quick-add="${esc(p.id)}" aria-label="Agregar ${esc(p.title)} al carrito">${ICON.cart}</button>` : ''}
         </div>
       </div>
-      ${soldout ? '<span class="badge gray">Agotado</span>' : p.offer != null && Number(p.offer) < Number(p.price) ? '<span class="badge">Oferta</span>' : ''}
     </div>`;
   };
 
