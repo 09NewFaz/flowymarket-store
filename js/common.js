@@ -281,7 +281,7 @@ export const DEFAULT_DESIGN = {
     ctaText: '', ctaType: 'url', ctaUrl: '', ctaBlock: '',
     size: 'md', fullHeight: false,
   },
-  animations: { intro: 'none', entrance: 'none', speed: 'normal', hover: 'none', heroMotion: 'none' },
+  animations: { intro: 'none', entrance: 'none', productAnim: 'none', hover: 'none', heroMotion: 'none', ambient: 'none', scrollBar: false, speed: 'normal' },
   blocks: [
     { id: 'b-hero', type: 'hero', visible: true },
     { id: 'b-catalog', type: 'catalog', visible: true, template: 'list', showCategories: true, showSearch: true, showSortFilter: true, showTitle: true, showPrice: true, showDescription: true, showExternalLink: false, showCartButton: true },

@@ -538,35 +538,86 @@ function renderFabs() {
   }).join('');
 }
 
+const INTRO_KINDS = new Set(['logo-fade', 'logo-zoom', 'curtain', 'split', 'circle', 'shimmer', 'ripple', 'brand-wipe']);
+const ENTRANCE_KINDS = new Set(['fade', 'slide-up', 'slide-down', 'slide-left', 'slide-right', 'zoom', 'zoom-out', 'blur', 'flip', 'bounce']);
+const PROD_ANIM_KINDS = new Set(['cascade', 'img-zoom', 'shine', 'tilt', 'badge-pulse']);
+const HOVER_KINDS = new Set(['lift', 'scale', 'glow', 'border', 'btn-shine', 'pop']);
+const HERO_MOTION_KINDS = new Set(['ken-burns', 'float', 'gradient-flow', 'cta-pulse', 'hero-stagger']);
+const AMBIENT_KINDS = new Set(['particles', 'bubbles', 'sparkles', 'petals', 'aurora']);
+
 let introPlayed = false;
 function playIntro(force = false) {
   const anim = state.cfg.design.animations || {};
-  const kind = ['logo-fade', 'curtain', 'logo-zoom'].includes(anim.intro) ? anim.intro : 'none';
+  const kind = INTRO_KINDS.has(anim.intro) ? anim.intro : 'none';
   if (kind === 'none') return;
   if (!force && (introPlayed || PREVIEW)) return;
   introPlayed = true;
   $('.intro-splash')?.remove();
   const logo = safeUrl(state.cfg.store.logo);
   const speed = ['fast', 'normal', 'slow'].includes(anim.speed) ? anim.speed : 'normal';
-  const dur = speed === 'fast' ? 950 : speed === 'slow' ? 1900 : 1350;
+  const dur = speed === 'fast' ? 950 : speed === 'slow' ? 1950 : 1400;
   const el = document.createElement('div');
   el.className = `intro-splash intro-${kind} spd-${speed}`;
-  el.innerHTML = `<div class="intro-inner">${logo ? `<img src="${esc(logo)}" alt="">` : ''}<span>${esc(state.cfg.store.name)}</span></div>`;
+  el.innerHTML = `
+    ${kind === 'split' ? '<div class="intro-door left"></div><div class="intro-door right"></div>' : ''}
+    ${kind === 'ripple' ? '<div class="intro-ring r1"></div><div class="intro-ring r2"></div>' : ''}
+    <div class="intro-inner">${logo ? `<img src="${esc(logo)}" alt="">` : ''}<span>${esc(state.cfg.store.name)}</span></div>`;
   document.body.appendChild(el);
-  setTimeout(() => el.classList.add('out'), Math.round(dur * 0.65));
-  setTimeout(() => el.remove(), dur + 500);
+  setTimeout(() => el.classList.add('out'), Math.round(dur * 0.62));
+  setTimeout(() => el.remove(), dur + 600);
+}
+
+function ambientHtml(kind) {
+  if (!AMBIENT_KINDS.has(kind)) return '';
+  if (kind === 'aurora') return '<div class="ambient-layer amb-aurora" aria-hidden="true"><i></i><i></i></div>';
+  const dots = Array.from({ length: 16 }, (_, i) => {
+    const left = ((i * 37) % 94) + 3;
+    const delay = ((i * 0.7) % 7).toFixed(1);
+    const dur = (6 + (i % 5) * 1.8).toFixed(1);
+    const sz = 6 + (i % 4) * 5;
+    return `<span style="left:${left}%;--d:${delay}s;--t:${dur}s;--s:${sz}px"></span>`;
+  }).join('');
+  return `<div class="ambient-layer amb-${kind}" aria-hidden="true">${dots}</div>`;
 }
 
 let animObs;
+let scrollBarHandler;
 function setupAnimations(replay = false) {
   animObs?.disconnect();
+  if (scrollBarHandler) { window.removeEventListener('scroll', scrollBarHandler); scrollBarHandler = null; }
   const page = $('.page');
   if (!page) return;
   const anim = state.cfg.design.animations || {};
-  const ent = ['fade', 'slide-up', 'slide-left', 'zoom', 'blur'].includes(anim.entrance) ? anim.entrance : 'none';
-  if (ent === 'none') return;
-  const items = [...page.children];
-  if (replay) items.forEach((el) => el.classList.remove('in-view'));
+
+  // Barra de progreso de lectura
+  const bar = $('.scroll-progress');
+  if (bar) {
+    scrollBarHandler = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      bar.style.transform = `scaleX(${Math.min(1, Math.max(0, window.scrollY / max))})`;
+    };
+    window.addEventListener('scroll', scrollBarHandler, { passive: true });
+    scrollBarHandler();
+  }
+
+  // Cascada en tarjetas de producto
+  if (anim.productAnim === 'cascade') {
+    const cards = [...page.querySelectorAll('.products .card')];
+    cards.forEach((c, i) => {
+      if (replay) c.classList.remove('in-view');
+      c.style.setProperty('--c-delay', `${Math.min(i, 10) * 60}ms`);
+    });
+  }
+
+  const ent = ENTRANCE_KINDS.has(anim.entrance) ? anim.entrance : 'none';
+  const watchCards = anim.productAnim === 'cascade';
+  if (ent === 'none' && !watchCards) return;
+
+  const targets = [
+    ...(ent !== 'none' ? [...page.children] : []),
+    ...(watchCards ? [...page.querySelectorAll('.products .card')] : []),
+  ];
+  if (replay) targets.forEach((el) => el.classList.remove('in-view'));
   animObs = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
       if (e.isIntersecting) {
@@ -574,9 +625,9 @@ function setupAnimations(replay = false) {
         animObs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.06, rootMargin: '0px 0px -24px 0px' });
-  items.forEach((el, idx) => {
-    el.style.setProperty('--stagger', `${Math.min(idx, 6) * 70}ms`);
+  }, { threshold: 0.05, rootMargin: '0px 0px -16px 0px' });
+  targets.forEach((el, idx) => {
+    if (!el.classList.contains('card')) el.style.setProperty('--stagger', `${Math.min(idx, 6) * 70}ms`);
     animObs.observe(el);
   });
 }
@@ -599,19 +650,23 @@ function render() {
     : '';
 
   const anim = design.animations || {};
-  const ent = ['fade', 'slide-up', 'slide-left', 'zoom', 'blur'].includes(anim.entrance) ? anim.entrance : 'none';
+  const ent = ENTRANCE_KINDS.has(anim.entrance) ? anim.entrance : 'none';
   const speed = ['fast', 'normal', 'slow'].includes(anim.speed) ? anim.speed : 'normal';
-  const hover = ['lift', 'scale', 'glow'].includes(anim.hover) ? anim.hover : 'none';
-  const heroMotion = ['ken-burns', 'float'].includes(anim.heroMotion) ? anim.heroMotion : 'none';
+  const hover = HOVER_KINDS.has(anim.hover) ? anim.hover : 'none';
+  const heroMotion = HERO_MOTION_KINDS.has(anim.heroMotion) ? anim.heroMotion : 'none';
+  const prodAnim = PROD_ANIM_KINDS.has(anim.productAnim) ? anim.productAnim : 'none';
+  const amb = AMBIENT_KINDS.has(anim.ambient) ? anim.ambient : 'none';
 
   const blocks = design.blocks || [];
   const hasCustomFooter = blocks.some((b) => b.type === 'footer' && b.visible !== false);
   const scroll = window.scrollY;
   $('#app').innerHTML = `
+    ${anim.scrollBar ? '<div class="scroll-progress" aria-hidden="true"></div>' : ''}
+    ${ambientHtml(amb)}
     ${bgVid ? `<div class="bg-video-wrap"><video src="${esc(bgVid)}" autoplay muted loop playsinline></video><div style="background:rgba(${ovRgb},${ovAlpha})"></div></div>` : ''}
     ${PREVIEW ? '<div class="banner-preview">Vista previa · los cambios aún no están publicados</div>' : ''}
     ${checkout.paused ? '<div class="banner-paused">La tienda no está recibiendo pedidos en este momento.</div>' : ''}
-    <div class="page" id="top" data-anim="${ent}" data-speed="${speed}" data-hover="${hover}" data-hero-motion="${heroMotion}">
+    <div class="page" id="top" data-anim="${ent}" data-speed="${speed}" data-hover="${hover}" data-hero-motion="${heroMotion}" data-prod-anim="${prodAnim}">
       ${blocks.map(renderBlock).join('')}
       ${hasCustomFooter ? '' : `<footer class="footer">© ${new Date().getFullYear()} ${esc(store.name)}</footer>`}
     </div>
