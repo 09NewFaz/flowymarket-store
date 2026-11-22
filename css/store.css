@@ -513,3 +513,98 @@ body.has-bg-image .page { background: color-mix(in srgb, var(--bg) 92%, transpar
   .intro-splash, .ambient-layer, .page[data-anim] > *, .page[data-prod-anim] .card, .hero { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
   .ambient-layer { display: none; }
 }
+
+/* ----- Anchos de página ----- */
+.page[data-width="compact"] { max-width: 660px; }
+.page[data-width="standard"] { max-width: 760px; }
+.page[data-width="wide"] { max-width: 980px; }
+.page[data-width="full"] { max-width: 100%; box-shadow: none; }
+
+/* ----- Plantillas de catálogo extra (Boutique y Compacto) ----- */
+.products.boutique { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; padding: 14px 16px 24px; }
+.products.boutique .card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.products.boutique .thumb { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 0; }
+.products.boutique .card-body { padding: 14px; }
+.products.boutique .card h3 { font-size: 17px; }
+
+.products.compact .card { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.products.compact .thumb { width: 58px; height: 58px; border-radius: calc(var(--radius) * .45); }
+.products.compact .card h3 { font-size: 14.5px; margin: 0 0 2px; }
+.products.compact .card p { display: none; }
+.products.compact .quick-add { width: 32px; height: 32px; }
+
+/* ----- Estilos de botones (Sólido, Degradado, Vidrio / Hielo, Contorno, Neón) ----- */
+.page[data-btn-style="gradient"] .btn:not(.ghost):not(.wa),
+.page[data-btn-style="gradient"] .quick-add {
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 65%, var(--text)));
+}
+.page[data-btn-style="glass"] .btn:not(.wa),
+.page[data-btn-style="glass"] .quick-add,
+.page[data-btn-style="glass"] .chip.active,
+.page[data-btn-style="glass"] .pill {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+  border: 1.5px solid color-mix(in srgb, var(--primary) 55%, #fff);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 4px 14px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.page[data-btn-style="outline"] .btn:not(.wa),
+.page[data-btn-style="outline"] .quick-add {
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+}
+.page[data-btn-style="glow"] .btn:not(.ghost):not(.wa),
+.page[data-btn-style="glow"] .quick-add {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 55%, transparent), 0 4px 14px rgba(0, 0, 0, .2);
+}
+
+/* ----- Estilos de tarjetas (Limpio, Elevado, Vidrio, Bordeado, Suave) ----- */
+.page[data-card-style="elevated"] .products .card,
+.page[data-card-style="elevated"] .bento-card,
+.page[data-card-style="elevated"] .test-card,
+.page[data-card-style="elevated"] .plan-card,
+.page[data-card-style="elevated"] .link-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+  border-color: transparent;
+}
+.page[data-card-style="elevated"] .products.list .card { margin: 8px 12px; width: auto; border: 0; }
+
+.page[data-card-style="glass"] .products .card,
+.page[data-card-style="glass"] .bento-card,
+.page[data-card-style="glass"] .test-card,
+.page[data-card-style="glass"] .plan-card,
+.page[data-card-style="glass"] .link-card,
+.page[data-card-style="glass"] .hours-card,
+.page[data-card-style="glass"] .blk-form {
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, rgba(255, 255, 255, .2));
+  border-radius: var(--radius);
+}
+.page[data-card-style="glass"] .products.list .card { margin: 8px 12px; width: auto; }
+
+.page[data-card-style="bordered"] .products .card,
+.page[data-card-style="bordered"] .bento-card,
+.page[data-card-style="bordered"] .test-card,
+.page[data-card-style="bordered"] .plan-card,
+.page[data-card-style="bordered"] .link-card {
+  border: 1.5px solid color-mix(in srgb, var(--primary) 42%, var(--line));
+  border-radius: var(--radius);
+}
+.page[data-card-style="bordered"] .products.list .card { margin: 8px 12px; width: auto; }
+
+.page[data-card-style="soft"] .products .card,
+.page[data-card-style="soft"] .bento-card,
+.page[data-card-style="soft"] .test-card,
+.page[data-card-style="soft"] .plan-card,
+.page[data-card-style="soft"] .link-card {
+  background: var(--soft);
+  border: 0;
+  border-radius: var(--radius);
+}
+.page[data-card-style="soft"] .products.list .card { margin: 8px 12px; width: auto; }

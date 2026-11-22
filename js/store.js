@@ -156,7 +156,7 @@ function renderHero(b) {
 
 function renderCatalog(b = {}) {
   const tpl = b.template || state.cfg.design.layout || 'list';
-  const layout = ['list', 'grid', 'glass', 'classic'].includes(tpl) ? tpl : 'list';
+  const layout = ['list', 'grid', 'glass', 'classic', 'boutique', 'compact'].includes(tpl) ? tpl : 'list';
   const showCats = b.showCategories !== false;
   const showSearch = b.showSearch !== false;
   const showTools = b.showSortFilter !== false;
@@ -662,6 +662,10 @@ function render() {
   const prodAnim = PROD_ANIM_KINDS.has(anim.productAnim) ? anim.productAnim : 'none';
   const amb = AMBIENT_KINDS.has(anim.ambient) ? anim.ambient : 'none';
 
+  const btnStyle = ['solid', 'gradient', 'glass', 'outline', 'glow'].includes(design.buttonStyle) ? design.buttonStyle : 'solid';
+  const cardStyle = ['clean', 'elevated', 'glass', 'bordered', 'soft'].includes(design.cardStyle) ? design.cardStyle : 'clean';
+  const pageWidth = ['compact', 'standard', 'wide', 'full'].includes(design.width) ? design.width : 'standard';
+
   const blocks = design.blocks || [];
   const hasCustomFooter = blocks.some((b) => b.type === 'footer' && b.visible !== false);
   const scroll = window.scrollY;
@@ -671,7 +675,7 @@ function render() {
     ${bgVid ? `<div class="bg-video-wrap"><video src="${esc(bgVid)}" autoplay muted loop playsinline></video><div style="background:rgba(${ovRgb},${ovAlpha})"></div></div>` : ''}
     ${PREVIEW ? '<div class="banner-preview">Vista previa · los cambios aún no están publicados</div>' : ''}
     ${checkout.paused ? '<div class="banner-paused">La tienda no está recibiendo pedidos en este momento.</div>' : ''}
-    <div class="page" id="top" data-anim="${ent}" data-speed="${speed}" data-hover="${hover}" data-hero-motion="${heroMotion}" data-prod-anim="${prodAnim}">
+    <div class="page" id="top" data-anim="${ent}" data-speed="${speed}" data-hover="${hover}" data-hero-motion="${heroMotion}" data-prod-anim="${prodAnim}" data-btn-style="${btnStyle}" data-card-style="${cardStyle}" data-width="${pageWidth}">
       ${blocks.map(renderBlock).join('')}
       ${hasCustomFooter ? '' : `<footer class="footer">© ${new Date().getFullYear()} ${esc(store.name)}</footer>`}
     </div>
