@@ -1,7 +1,7 @@
 // ===== FlowyMarket: tienda pública =====
 import {
   sb, esc, money, moneyText, safeUrl, safeLink, withDefaults, applyTheme, ORDER_TYPES, ADDRESS_FIELDS,
-  orderErrorMessage, waLink, validSelection, youtubeEmbedUrl, mapsEmbedUrl,
+  orderErrorMessage, waLink, validSelection, youtubeEmbedUrl, mapsEmbedUrl, BENTO_ICONS,
 } from './common.js';
 
 const PREVIEW = new URLSearchParams(location.search).has('preview');
@@ -225,15 +225,24 @@ function renderCatalog(b = {}) {
   </section>`;
 }
 
+const SSVG = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const UI_IC = {
+  phone: SSVG('<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>'),
+  mail:  SSVG('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>'),
+  pin:   SSVG('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>'),
+  link:  SSVG('<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/>'),
+  tag:   SSVG('<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/>'),
+};
+
 const SOCIAL_META = {
-  instagram: { label: 'Instagram', icon: '📸' },
-  tiktok:    { label: 'TikTok',    icon: '🎵' },
-  facebook:  { label: 'Facebook',  icon: '📘' },
-  x:         { label: 'X',         icon: '✖️' },
-  youtube:   { label: 'YouTube',   icon: '▶️' },
-  whatsapp:  { label: 'WhatsApp',  icon: '💬' },
-  email:     { label: 'Correo',    icon: '✉️' },
-  web:       { label: 'Web',       icon: '🌐' },
+  instagram: { label: 'Instagram', icon: SSVG('<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>') },
+  tiktok:    { label: 'TikTok',    icon: SSVG('<path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>') },
+  facebook:  { label: 'Facebook',  icon: SSVG('<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3Z"/>') },
+  x:         { label: 'X',         icon: SSVG('<path d="M4 4l16 16M20 4 4 20"/>') },
+  youtube:   { label: 'YouTube',   icon: SSVG('<rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 16 12 10 15 10 9" fill="currentColor" stroke="none"/>') },
+  whatsapp:  { label: 'WhatsApp',  icon: ICON.wa },
+  email:     { label: 'Correo',    icon: UI_IC.mail },
+  web:       { label: 'Web',       icon: SSVG('<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/>') },
 };
 
 function safeActionHref(u) {
@@ -298,7 +307,7 @@ function renderBlock(b) {
         ${b.title ? `<h3>${esc(b.title)}</h3>` : ''}
         ${b.subtitle ? `<p>${esc(b.subtitle)}</p>` : ''}
         <div class="promo-actions">
-          ${b.code ? `<button type="button" class="promo-code" data-copy="${esc(b.code)}">🏷️ ${esc(b.code)} · Copiar</button>` : ''}
+          ${b.code ? `<button type="button" class="promo-code" data-copy="${esc(b.code)}">${UI_IC.tag}<span>${esc(b.code)} · Copiar</span></button>` : ''}
           ${b.ctaText && href ? `<a class="btn" href="${esc(href)}" ${isExt ? 'target="_blank" rel="noopener"' : ''}>${esc(b.ctaText)}</a>` : ''}
         </div>
       </div></section>`;
@@ -412,9 +421,9 @@ function renderBlock(b) {
       return `<footer id="${id}" class="block-footer">
         ${b.description ? `<p class="bf-desc">${esc(b.description)}</p>` : ''}
         ${(b.phone || b.email || b.address) ? `<div class="bf-contact">
-          ${b.phone ? `<span>📞 ${esc(b.phone)}</span>` : ''}
-          ${b.email ? `<span>✉️ ${esc(b.email)}</span>` : ''}
-          ${b.address ? `<span>📍 ${esc(b.address)}</span>` : ''}
+          ${b.phone ? `<span class="ic-inline">${UI_IC.phone}${esc(b.phone)}</span>` : ''}
+          ${b.email ? `<span class="ic-inline">${UI_IC.mail}${esc(b.email)}</span>` : ''}
+          ${b.address ? `<span class="ic-inline">${UI_IC.pin}${esc(b.address)}</span>` : ''}
         </div>` : ''}
         ${links.length ? `<nav class="bf-links">${links.map((l) => {
           const href = safeActionHref(l.url) || '#';
@@ -434,11 +443,14 @@ function renderBlock(b) {
       if (!items.length) return '';
       return `<section id="${id}" class="block-sec">
         ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
-        <div class="bento-grid">${items.map((it) => `<div class="bento-card">
-          ${it.icon ? `<div class="bento-ic">${esc(it.icon)}</div>` : ''}
+        <div class="bento-grid">${items.map((it) => {
+          const ic = BENTO_ICONS[it.icon]?.svg;
+          return `<div class="bento-card">
+          ${ic ? `<div class="bento-ic">${ic}</div>` : it.icon ? `<div class="bento-ic">${esc(it.icon)}</div>` : ''}
           <b>${esc(it.title || '')}</b>
           ${it.desc ? `<p>${esc(it.desc)}</p>` : ''}
-        </div>`).join('')}</div>
+        </div>`;
+        }).join('')}</div>
       </section>`;
     }
     case 'stats': {
@@ -514,11 +526,11 @@ function renderFabs() {
     const ch = b.channel || 'whatsapp';
     const val = b.value || (ch === 'whatsapp' ? state.cfg.store.whatsapp : '');
     let href = '';
-    let ic = '💬';
+    let ic = ICON.wa;
     if (ch === 'whatsapp' && val) { href = waLink(val, b.message || 'Hola!'); ic = ICON.wa; }
-    else if (ch === 'phone' && val) { href = `tel:${val.replace(/[^+\d]/g, '')}`; ic = '📞'; }
-    else if (ch === 'email' && val) { href = `mailto:${val}`; ic = '✉️'; }
-    else if (ch === 'url') { href = safeLink(val); ic = '🔗'; }
+    else if (ch === 'phone' && val) { href = `tel:${val.replace(/[^+\d]/g, '')}`; ic = UI_IC.phone; }
+    else if (ch === 'email' && val) { href = `mailto:${val}`; ic = UI_IC.mail; }
+    else if (ch === 'url') { href = safeLink(val); ic = UI_IC.link; }
     if (!href) return '';
     const pos = ['bottom-left', 'bottom-right', 'top-left', 'top-right'].includes(b.position) ? b.position : 'bottom-left';
     const bg = /^#[0-9a-f]{6}$/i.test(b.color || '') ? `background:${b.color};` : '';

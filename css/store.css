@@ -383,3 +383,13 @@ body.has-bg-image .page { background: color-mix(in srgb, var(--bg) 92%, transpar
 .plan-card h3 { margin: 0; font-size: 18px; }
 .plan-price { font-size: 28px; font-weight: 700; color: var(--primary); }
 .plan-card ul { list-style: none; padding: 0; margin: 4px 0 12px; display: grid; gap: 6px; font-size: 13.5px; flex: 1; }
+
+/* ----- Íconos vectoriales ----- */
+.social-pill svg { width: 16px; height: 16px; flex: none; display: block; }
+.contact-fab svg { width: 22px; height: 22px; flex: none; display: block; }
+.promo-code { display: inline-flex; align-items: center; gap: 7px; }
+.promo-code svg { width: 16px; height: 16px; flex: none; display: block; }
+.ic-inline { display: inline-flex; align-items: center; gap: 6px; }
+.ic-inline svg { width: 15px; height: 15px; flex: none; display: block; color: var(--primary); }
+.bento-ic { width: 40px; height: 40px; border-radius: calc(var(--radius) * .6); background: var(--soft); color: var(--primary); display: grid; place-items: center; margin-bottom: 10px; }
+.bento-ic svg { width: 20px; height: 20px; display: block; }

@@ -129,31 +129,46 @@ export const BLOCK_CATEGORIES = [
   'Interactivo',
 ];
 
+const SVG = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+export const BENTO_ICONS = {
+  sparkles: { label: 'Destello', svg: SVG('<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>') },
+  truck:    { label: 'Envío',    svg: SVG('<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.6a1 1 0 0 0-.3-.7l-3.4-3.4a1 1 0 0 0-.7-.3H14"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>') },
+  chat:     { label: 'Atención', svg: SVG('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5Z"/>') },
+  shield:   { label: 'Garantía', svg: SVG('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>') },
+  star:     { label: 'Estrella', svg: SVG('<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/>') },
+  heart:    { label: 'Favorito', svg: SVG('<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/>') },
+  clock:    { label: 'Rapidez',  svg: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>') },
+  award:    { label: 'Calidad',  svg: SVG('<circle cx="12" cy="8" r="6"/><path d="M15.5 12.9 17 22l-5-3-5 3 1.5-9.1"/>') },
+  gift:     { label: 'Regalo',   svg: SVG('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>') },
+  tag:      { label: 'Oferta',   svg: SVG('<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/>') },
+};
+
 export const BLOCK_TYPES = {
-  hero:         { label: 'Sección de Presentación', icon: '🖼️', unique: true, cats: ['Sección de Presentación', 'Contenido'], desc: 'Sección de presentación con título, subtítulo y llamada a la acción' },
-  catalog:      { label: 'Catálogo de Productos',   icon: '🛍️', unique: true, cats: ['Contenido', 'E-Commerce'], desc: 'Cuadrícula o lista de productos con varias opciones de visualización' },
-  text:         { label: 'Texto',                   icon: '📝', cats: ['Contenido'], desc: 'Contenido de texto enriquecido con opciones de formato' },
-  image:        { label: 'Imagen',                  icon: '🏞️', cats: ['Contenido', 'Multimedia'], desc: 'Imagen única con leyenda y opciones de enlace' },
-  carousel:     { label: 'Carrusel de Productos',   icon: '🎠', cats: ['Contenido', 'E-Commerce'], desc: 'Carrusel desplazable de productos seleccionados' },
-  bio:          { label: 'Biografía',               icon: '👤', cats: ['Sección de Presentación', 'Contenido'], desc: 'Sección de perfil con imagen y descripción' },
-  promo:        { label: 'Banner de Promociones',   icon: '🏷️', cats: ['Contenido', 'E-Commerce'], desc: 'Muestra ofertas y promociones destacadas' },
-  youtube:      { label: 'YouTube',                 icon: '▶️', cats: ['Contenido', 'Multimedia'], desc: 'Incorpora videos de YouTube' },
-  map:          { label: 'Mapa',                    icon: '📍', cats: ['Multimedia', 'Interactivo'], desc: 'Muestra una ubicación con Google Maps' },
-  form:         { label: 'Formulario',              icon: '📋', cats: ['Contenido', 'Interactivo'], desc: 'Crea formularios para recopilar consultas o datos' },
-  social:       { label: 'Iconos de Redes Sociales', icon: '🔗', cats: ['Contenido', 'Interactivo'], desc: 'Muestra íconos de tus redes sociales' },
-  cart:         { label: 'Botón de Carrito',        icon: '🛒', unique: true, cats: ['E-Commerce', 'Interactivo'], desc: 'Botón flotante para abrir el carrito de compras' },
-  links:        { label: 'Botones de Enlace',       icon: '🔘', cats: ['Contenido', 'Interactivo'], desc: 'Botones de enlaces personalizados con imágenes' },
-  fab:          { label: 'Botón Flotante',          icon: '💬', cats: ['Interactivo'], desc: 'Botón de acción flotante para WhatsApp, teléfono, correo, etc.' },
-  testimonials: { label: 'Testimonios',             icon: '⭐', cats: ['Contenido'], desc: 'Muestra reseñas y opiniones de tus clientes' },
-  faq:          { label: 'Preguntas Frecuentes',    icon: '❓', cats: ['Contenido', 'Interactivo'], desc: 'Lista de preguntas frecuentes con respuestas desplegables' },
-  gallery:      { label: 'Galería',                 icon: '🖼️', cats: ['Contenido', 'Multimedia'], desc: 'Galería de imágenes en cuadrícula, mosaico o carrusel' },
-  hours:        { label: 'Horario',                 icon: '🕒', cats: ['Contenido'], desc: 'Muestra tu horario de atención' },
-  footer:       { label: 'Pie de Página',           icon: '📄', cats: ['Contenido'], desc: 'Pie de página con enlaces, contacto y redes sociales' },
-  spacer:       { label: 'Espaciador',              icon: '➖', cats: ['Contenido'], desc: 'Agrega espacio o un separador entre bloques' },
-  bento:        { label: 'Bento de Características', icon: '🍱', cats: ['Contenido'], desc: 'Grilla de características con íconos y descripciones' },
-  stats:        { label: 'Estadísticas',            icon: '📊', cats: ['Contenido'], desc: 'Fila de cifras o métricas destacadas de tu negocio' },
-  pricing:      { label: 'Tabla de Precios',        icon: '💳', cats: ['Contenido', 'E-Commerce'], desc: 'Tabla de precios con planes y selector mensual/anual opcional' },
-  popup:        { label: 'Ventana Emergente',       icon: '🪟', cats: ['Contenido', 'Interactivo'], desc: 'Ventana emergente con disparador (carga, scroll, salida o clic)' },
+  hero:         { label: 'Sección de Presentación', icon: SVG('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 14l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/>'), unique: true, cats: ['Sección de Presentación', 'Contenido'], desc: 'Sección de presentación con título, subtítulo y llamada a la acción' },
+  catalog:      { label: 'Catálogo de Productos',   icon: SVG('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>'), unique: true, cats: ['Contenido', 'E-Commerce'], desc: 'Cuadrícula o lista de productos con varias opciones de visualización' },
+  text:         { label: 'Texto',                   icon: SVG('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'), cats: ['Contenido'], desc: 'Contenido de texto enriquecido con opciones de formato' },
+  image:        { label: 'Imagen',                  icon: SVG('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>'), cats: ['Contenido', 'Multimedia'], desc: 'Imagen única con leyenda y opciones de enlace' },
+  carousel:     { label: 'Carrusel de Productos',   icon: SVG('<rect x="7" y="4" width="10" height="16" rx="2"/><path d="M3 7v10M21 7v10"/>'), cats: ['Contenido', 'E-Commerce'], desc: 'Carrusel desplazable de productos seleccionados' },
+  bio:          { label: 'Biografía',               icon: SVG('<circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/>'), cats: ['Sección de Presentación', 'Contenido'], desc: 'Sección de perfil con imagen y descripción' },
+  promo:        { label: 'Banner de Promociones',   icon: SVG('<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/>'), cats: ['Contenido', 'E-Commerce'], desc: 'Muestra ofertas y promociones destacadas' },
+  youtube:      { label: 'YouTube',                 icon: SVG('<rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 16 12 10 15 10 9" fill="currentColor" stroke="none"/>'), cats: ['Contenido', 'Multimedia'], desc: 'Incorpora videos de YouTube' },
+  map:          { label: 'Mapa',                    icon: SVG('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>'), cats: ['Multimedia', 'Interactivo'], desc: 'Muestra una ubicación con Google Maps' },
+  form:         { label: 'Formulario',              icon: SVG('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'), cats: ['Contenido', 'Interactivo'], desc: 'Crea formularios para recopilar consultas o datos' },
+  social:       { label: 'Iconos de Redes Sociales', icon: SVG('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>'), cats: ['Contenido', 'Interactivo'], desc: 'Muestra íconos de tus redes sociales' },
+  cart:         { label: 'Botón de Carrito',        icon: SVG('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L22 8H6.2"/>'), unique: true, cats: ['E-Commerce', 'Interactivo'], desc: 'Botón flotante para abrir el carrito de compras' },
+  links:        { label: 'Botones de Enlace',       icon: SVG('<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/>'), cats: ['Contenido', 'Interactivo'], desc: 'Botones de enlaces personalizados con imágenes' },
+  fab:          { label: 'Botón Flotante',          icon: SVG('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5Z"/>'), cats: ['Interactivo'], desc: 'Botón de acción flotante para WhatsApp, teléfono, correo, etc.' },
+  testimonials: { label: 'Testimonios',             icon: SVG('<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/>'), cats: ['Contenido'], desc: 'Muestra reseñas y opiniones de tus clientes' },
+  faq:          { label: 'Preguntas Frecuentes',    icon: SVG('<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'), cats: ['Contenido', 'Interactivo'], desc: 'Lista de preguntas frecuentes con respuestas desplegables' },
+  gallery:      { label: 'Galería',                 icon: SVG('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>'), cats: ['Contenido', 'Multimedia'], desc: 'Galería de imágenes en cuadrícula, mosaico o carrusel' },
+  hours:        { label: 'Horario',                 icon: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), cats: ['Contenido'], desc: 'Muestra tu horario de atención' },
+  footer:       { label: 'Pie de Página',           icon: SVG('<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15h18"/>'), cats: ['Contenido'], desc: 'Pie de página con enlaces, contacto y redes sociales' },
+  spacer:       { label: 'Espaciador',              icon: SVG('<path d="M5 12h14M12 5v3M12 16v3"/>'), cats: ['Contenido'], desc: 'Agrega espacio o un separador entre bloques' },
+  bento:        { label: 'Bento de Características', icon: SVG('<rect x="3" y="3" width="8" height="10" rx="1.5"/><rect x="13" y="3" width="8" height="6" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="15" width="8" height="6" rx="1.5"/>'), cats: ['Contenido'], desc: 'Grilla de características con íconos y descripciones' },
+  stats:        { label: 'Estadísticas',            icon: SVG('<path d="M3 3v18h18"/><path d="M7 16v-4M12 16V8M17 16v-6"/>'), cats: ['Contenido'], desc: 'Fila de cifras o métricas destacadas de tu negocio' },
+  pricing:      { label: 'Tabla de Precios',        icon: SVG('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>'), cats: ['Contenido', 'E-Commerce'], desc: 'Tabla de precios con planes y selector mensual/anual opcional' },
+  popup:        { label: 'Ventana Emergente',       icon: SVG('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M16 6.5h2"/>'), cats: ['Contenido', 'Interactivo'], desc: 'Ventana emergente con disparador (carga, scroll, salida o clic)' },
 };
 
 export function createBlock(type) {
@@ -207,9 +222,9 @@ export function createBlock(type) {
       return { ...base, size: 'md', line: true };
     case 'bento':
       return { ...base, title: 'Por qué elegirnos', items: [
-        { icon: '✨', title: 'Calidad garantizada', desc: 'Productos seleccionados con los mejores estándares.' },
-        { icon: '🚀', title: 'Envío rápido', desc: 'Despachamos tus pedidos en tiempo récord.' },
-        { icon: '💬', title: 'Atención directa', desc: 'Te asesoramos por WhatsApp en cada paso.' },
+        { icon: 'sparkles', title: 'Calidad garantizada', desc: 'Productos seleccionados con los mejores estándares.' },
+        { icon: 'truck', title: 'Envío rápido', desc: 'Despachamos tus pedidos en tiempo récord.' },
+        { icon: 'chat', title: 'Atención directa', desc: 'Te asesoramos por WhatsApp en cada paso.' },
       ] };
     case 'stats':
       return { ...base, title: '', items: [
