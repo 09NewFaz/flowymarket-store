@@ -1066,20 +1066,59 @@ function orderMessage(o, customer, address) {
 
 function showDone(o, customer, address) {
   const num = state.cfg.store.whatsapp;
-  const link = num ? waLink(num, orderMessage(o, customer, address)) : '';
+  const summaryText = orderMessage(o, customer, address);
+  const link = num ? waLink(num, summaryText) : '';
   const pm = state.cfg.payments;
-  openSheet(`${head('¡Pedido recibido!')}
+  const af = state.cfg.checkout?.aftersell || {};
+  const afOn = af.enabled !== false;
+  const title = (afOn && af.title) || '¡Pedido recibido!';
+  const upsellText = af.upsellOn && (af.upsellTitle || af.upsellText);
+  const upsellWa = num && upsellText
+    ? waLink(num, `Hola! Acabo de realizar el pedido #${o.num} y quiero sumar la oferta post-compra: ${af.upsellTitle || ''} ${af.upsellText || ''}${af.upsellPrice ? ` (${moneyText(af.upsellPrice, cur())})` : ''}`.trim())
+    : '';
+  const socialHref = afOn && af.socialUrl ? safeLink(af.socialUrl) : '';
+  const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>';
+
+  openSheet(`${head(title)}
     <div class="sheet-body done">
-      <div class="big">🎉</div>
+      <div class="done-check">${checkSvg}</div>
       <h3>Pedido #${esc(o.num)}</h3>
       <p class="muted">Total: <b>${money(o.total, cur())}</b></p>
+      ${afOn && af.steps !== false ? `<div class="aftersell-steps">
+        <span><b>1</b> Envía por WhatsApp</span>
+        <span><b>2</b> Confirmamos pago</span>
+        <span><b>3</b> Despacho / Retiro</span>
+      </div>` : ''}
       ${o.pay === 'Transferencia' && pm.transferInfo ? `<div class="transfer-box"><b>Datos para transferir</b>\n${esc(pm.transferInfo)}</div>` : ''}
-      ${link ? '<p>Envía el pedido por WhatsApp para confirmarlo con la tienda.</p>' : '<p>La tienda se comunicará contigo para confirmarlo.</p>'}
+      ${afOn && upsellText ? `<div class="upsell-card">
+        <span class="upsell-tag">OFERTA EXCLUSIVA POST-COMPRA</span>
+        ${af.upsellTitle ? `<h4>${esc(af.upsellTitle)}</h4>` : ''}
+        ${af.upsellText ? `<p>${esc(af.upsellText)}</p>` : ''}
+        ${af.upsellPrice ? `<div class="upsell-price">${money(af.upsellPrice, cur())}</div>` : ''}
+        ${upsellWa ? `<a class="btn block" href="${esc(upsellWa)}" target="_blank" rel="noopener">${esc(af.upsellCta || 'Sumar oferta a mi pedido')}</a>` : ''}
+      </div>` : ''}
+      ${afOn && af.couponCode ? `<div class="coupon-card">
+        <small>${esc(af.couponText || 'Regalo para tu próxima compra')}</small>
+        <div class="coupon-row">
+          <b>${esc(af.couponCode)}</b>
+          <button type="button" class="btn ghost sm" data-copy-done="${esc(af.couponCode)}">Copiar</button>
+        </div>
+      </div>` : ''}
+      <div class="done-extra">
+        <button type="button" class="btn ghost sm" data-copy-summary>Copiar resumen</button>
+        ${socialHref ? `<a class="btn ghost sm" href="${esc(socialHref)}" target="_blank" rel="noopener">${esc(af.socialLabel || 'Síguenos')}</a>` : ''}
+      </div>
     </div>
     <div class="sheet-foot">
-      ${link ? `<a class="btn wa block" href="${esc(link)}" target="_blank" rel="noopener">${ICON.wa} Enviar por WhatsApp</a>` : '<button class="btn block" data-x>Listo</button>'}
-    </div>`);
-  if (link) window.open(link, '_blank', 'noopener');
+      ${link ? `<a class="btn wa block" href="${esc(link)}" target="_blank" rel="noopener">${ICON.wa} Enviar pedido por WhatsApp</a>` : '<button class="btn block" data-x>Listo</button>'}
+    </div>`, {
+    onMount: (s) => {
+      const cpSum = s.querySelector('[data-copy-summary]');
+      if (cpSum) cpSum.onclick = () => { navigator.clipboard?.writeText(summaryText).catch(() => {}); toast('Resumen copiado'); };
+      const cpCode = s.querySelector('[data-copy-done]');
+      if (cpCode) cpCode.onclick = () => { navigator.clipboard?.writeText(cpCode.dataset.copyDone).catch(() => {}); toast(`Código "${cpCode.dataset.copyDone}" copiado`); };
+    },
+  });
 }
 
 // ---------- Acciones rápidas, Popups y Formularios ----------
