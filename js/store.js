@@ -92,8 +92,24 @@ function thumbHtml(p, overlay = '') {
   const src = safeUrl(p?.img);
   return `<div class="thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : ICON.tag}${overlay}</div>`;
 }
+function minOptionPrice(p) {
+  let min = Infinity;
+  for (const g of p?.options || []) {
+    for (const it of g.items || []) {
+      const pr = Number(it.price) || 0;
+      if (it.available !== false && pr > 0 && pr < min) min = pr;
+    }
+  }
+  return min === Infinity ? 0 : min;
+}
+function isOptionPriced(p) {
+  return unitBase(p) === 0 && minOptionPrice(p) > 0;
+}
+function displayPriceBase(p) {
+  return isOptionPriced(p) ? minOptionPrice(p) : unitBase(p);
+}
 function hasPaidOptions(p) {
-  return Array.isArray(p?.options) && p.options.some((g) => (g.items || []).some((it) => it.available !== false && Number(it.price) > 0));
+  return minOptionPrice(p) > 0;
 }
 function offerInfo(p) {
   const price = Number(p?.price) || 0;
@@ -104,6 +120,9 @@ function offerInfo(p) {
   return { price, offer, save, pct };
 }
 function priceHtml(p, { showFrom = false, showSave = false } = {}) {
+  if (isOptionPriced(p)) {
+    return `<span class="price-from">Desde</span><span>${money(minOptionPrice(p), cur())}</span>`;
+  }
   const off = offerInfo(p);
   const from = showFrom && hasPaidOptions(p) ? '<span class="price-from">Desde</span>' : '';
   if (off) {
@@ -124,15 +143,15 @@ function visibleProducts() {
   const { min, max, offer } = state.filter;
   let list = state.prods.filter((p) => {
     if (q && !(`${p.title} ${p.description}`.toLowerCase().includes(q))) return false;
-    const price = unitBase(p);
+    const price = displayPriceBase(p);
     if (min !== '' && price < Number(min)) return false;
     if (max !== '' && price > Number(max)) return false;
     if (offer && !(p.offer != null && Number(p.offer) < Number(p.price))) return false;
     return true;
   });
   const by = {
-    asc: (a, b) => unitBase(a) - unitBase(b),
-    desc: (a, b) => unitBase(b) - unitBase(a),
+    asc: (a, b) => displayPriceBase(a) - displayPriceBase(b),
+    desc: (a, b) => displayPriceBase(b) - displayPriceBase(a),
     name: (a, b) => a.title.localeCompare(b.title, 'es'),
   }[state.sort];
   if (by) list = [...list].sort(by);
@@ -892,7 +911,7 @@ function openProduct(id) {
             return `<label class="opt ${off ? 'disabled' : ''}">
               <input type="${g.multi ? 'checkbox' : 'radio'}" name="g${gi}" value="${ii}" ${off ? 'disabled' : ''}>
               <span>${esc(it.title)}</span>
-              ${Number(it.price) > 0 ? `<small>+${money(it.price, cur())}</small>` : ''}
+              ${Number(it.price) > 0 ? `<small>${isOptionPriced(p) ? '' : '+'}${money(it.price, cur())}</small>` : ''}
             </label>`;
           }).join('')}
         </div>`).join('') : ''}
@@ -950,6 +969,7 @@ function openProduct(id) {
         return sel;
       };
       const missingGroup = (sel) => options.find((g, gi) => g.required && (g.items || []).some((i) => i.available !== false) && !sel.some(([x]) => x === gi));
+      const needsOption = (sel) => isOptionPriced(p) && sel.length === 0;
       const update = () => {
         s.querySelector('.qty span').textContent = qty;
         const sel = selection();
@@ -957,6 +977,8 @@ function openProduct(id) {
         const addBtn = s.querySelector('[data-add]');
         if (missing) {
           addBtn.textContent = `Selecciona ${missing.title || 'una opción'}`;
+        } else if (needsOption(sel)) {
+          addBtn.textContent = 'Selecciona una opción';
         } else {
           const unit = lineUnit({ id: p.id, sel });
           addBtn.innerHTML = `Agregar · <span data-total>${money(unit * qty, cur())}</span>`;
@@ -987,6 +1009,7 @@ function openProduct(id) {
         const missing = missingGroup(sel);
         const err = s.querySelector('.error-box');
         if (missing) { err.textContent = `Elige una opción en "${missing.title || 'Opciones'}".`; err.hidden = false; return; }
+        if (needsOption(sel)) { err.textContent = 'Elige al menos una opción para continuar.'; err.hidden = false; return; }
         const note = s.querySelector('#pnote').value.trim();
         const key = JSON.stringify([p.id, sel, note]);
         const existing = state.cart.find((l) => JSON.stringify([l.id, l.sel, l.note || '']) === key);
@@ -1227,7 +1250,7 @@ function quickAdd(id) {
   const p = prodById(id);
   if (!p || !p.cart || p.stock === 0 || state.cfg.checkout.paused) return;
   const opts = Array.isArray(p.options) ? p.options : [];
-  if (opts.some((g) => g.required && (g.items || []).some((i) => i.available !== false))) {
+  if (isOptionPriced(p) || opts.some((g) => g.required && (g.items || []).some((i) => i.available !== false))) {
     openProduct(id);
     return;
   }
