@@ -823,17 +823,63 @@ function openFilter() {
 }
 
 // ----- Detalle de producto -----
+function openLightbox(imgs, startIdx = 0) {
+  let idx = startIdx;
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.innerHTML = `
+    <button type="button" class="lb-close" aria-label="Cerrar">×</button>
+    ${imgs.length > 1 ? '<button type="button" class="lb-nav prev" aria-label="Anterior">‹</button><button type="button" class="lb-nav next" aria-label="Siguiente">›</button>' : ''}
+    <img src="${esc(imgs[idx])}" alt="">
+    ${imgs.length > 1 ? `<span class="lb-count">1 / ${imgs.length}</span>` : ''}`;
+  document.body.appendChild(lb);
+  const imgEl = lb.querySelector('img');
+  const cntEl = lb.querySelector('.lb-count');
+  const show = (n) => {
+    idx = (n + imgs.length) % imgs.length;
+    imgEl.src = imgs[idx];
+    if (cntEl) cntEl.textContent = `${idx + 1} / ${imgs.length}`;
+  };
+  const close = () => { lb.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft' && imgs.length > 1) show(idx - 1);
+    else if (e.key === 'ArrowRight' && imgs.length > 1) show(idx + 1);
+  };
+  document.addEventListener('keydown', onKey);
+  lb.addEventListener('click', (e) => { if (e.target === lb || e.target.closest('.lb-close')) close(); });
+  lb.querySelector('.prev')?.addEventListener('click', (e) => { e.stopPropagation(); show(idx - 1); });
+  lb.querySelector('.next')?.addEventListener('click', (e) => { e.stopPropagation(); show(idx + 1); });
+}
+
+function relatedProducts(p) {
+  const same = state.prods.filter((x) => x.id !== p.id && x.category_id === p.category_id && x.stock !== 0);
+  const others = state.prods.filter((x) => x.id !== p.id && x.category_id !== p.category_id && x.stock !== 0);
+  return [...same, ...others].slice(0, 4);
+}
+
 function openProduct(id) {
   const p = prodById(id);
   if (!p) return;
   const imgs = [p.img, ...(p.imgs || [])].map(safeUrl).filter(Boolean);
   const options = Array.isArray(p.options) ? p.options : [];
   const canBuy = p.cart && p.stock !== 0 && !state.cfg.checkout.paused;
+  const related = relatedProducts(p);
   let qty = 1;
+  let gIdx = 0;
 
   const html = `${head(p.title)}
     <div class="sheet-body">
-      ${imgs.length ? `<div class="gallery ${imgs.length === 1 ? 'single' : ''}">${imgs.map((s) => `<img src="${esc(s)}" alt="">`).join('')}</div>` : ''}
+      ${imgs.length ? `<div class="pgal">
+        <div class="pgal-main">
+          <img class="pgal-img" src="${esc(imgs[0])}" alt="${esc(p.title)}">
+          ${imgs.length > 1 ? `<button type="button" class="pgal-nav prev" aria-label="Foto anterior">‹</button>
+            <button type="button" class="pgal-nav next" aria-label="Siguiente foto">›</button>
+            <span class="pgal-count">1 / ${imgs.length}</span>` : ''}
+          <span class="pgal-zoom" aria-hidden="true">⤢</span>
+        </div>
+        ${imgs.length > 1 ? `<div class="pgal-thumbs">${imgs.map((s, i) => `<button type="button" class="pgal-th ${i === 0 ? 'active' : ''}" data-gidx="${i}" aria-label="Ver foto ${i + 1}"><img src="${esc(s)}" alt=""></button>`).join('')}</div>` : ''}
+      </div>` : ''}
       <h3 class="p-title">${esc(p.title)}</h3>
       <div class="price" style="margin-bottom:10px">${priceHtml(p, { showFrom: true, showSave: true })}</div>
       ${p.description ? `<p class="p-desc">${esc(p.description)}</p>` : ''}
@@ -852,6 +898,13 @@ function openProduct(id) {
         </div>`).join('') : ''}
       ${canBuy ? `<div class="field"><label for="pnote">Nota para este producto (opcional)</label><textarea id="pnote" rows="2" maxlength="300" placeholder="Ej: talle, color, aclaraciones…"></textarea></div>` : ''}
       <div class="error-box" hidden></div>
+      ${related.length ? `<div class="related-sec">
+        <h4>También te puede gustar</h4>
+        <div class="related-row">${related.map((r) => `<button type="button" class="rel-card" data-rel="${esc(r.id)}">
+          ${thumbHtml(r)}
+          <div class="rel-body"><b>${esc(r.title)}</b><div class="price">${priceHtml(r, { showFrom: true })}</div></div>
+        </button>`).join('')}</div>
+      </div>` : ''}
     </div>
     ${canBuy ? `<div class="sheet-foot foot-row">
       <div class="qty"><button data-q="-1" aria-label="Menos">−</button><span>1</span><button data-q="1" aria-label="Más">+</button></div>
@@ -862,6 +915,32 @@ function openProduct(id) {
   openSheet(html, {
     cls: sideCls,
     onMount: (s) => {
+      // Galería pro (flechas, miniaturas, swipe y zoom)
+      if (imgs.length) {
+        const mainImg = s.querySelector('.pgal-img');
+        const cnt = s.querySelector('.pgal-count');
+        const thumbs = s.querySelectorAll('[data-gidx]');
+        const setImg = (n) => {
+          gIdx = (n + imgs.length) % imgs.length;
+          mainImg.src = imgs[gIdx];
+          if (cnt) cnt.textContent = `${gIdx + 1} / ${imgs.length}`;
+          thumbs.forEach((th, i) => th.classList.toggle('active', i === gIdx));
+        };
+        mainImg.onclick = () => openLightbox(imgs, gIdx);
+        s.querySelector('.pgal-nav.prev')?.addEventListener('click', (e) => { e.stopPropagation(); setImg(gIdx - 1); });
+        s.querySelector('.pgal-nav.next')?.addEventListener('click', (e) => { e.stopPropagation(); setImg(gIdx + 1); });
+        thumbs.forEach((th) => (th.onclick = () => setImg(Number(th.dataset.gidx))));
+        let sx = 0;
+        const stage = s.querySelector('.pgal-main');
+        stage.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+        stage.addEventListener('touchend', (e) => {
+          if (imgs.length < 2) return;
+          const dx = e.changedTouches[0].clientX - sx;
+          if (Math.abs(dx) > 40) setImg(dx < 0 ? gIdx + 1 : gIdx - 1);
+        }, { passive: true });
+      }
+      // Productos relacionados
+      s.querySelectorAll('[data-rel]').forEach((btn) => (btn.onclick = () => openProduct(btn.dataset.rel)));
       if (!canBuy) return;
       const selection = () => {
         const sel = [];
