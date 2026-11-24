@@ -835,7 +835,7 @@ function openProduct(id) {
     <div class="sheet-body">
       ${imgs.length ? `<div class="gallery ${imgs.length === 1 ? 'single' : ''}">${imgs.map((s) => `<img src="${esc(s)}" alt="">`).join('')}</div>` : ''}
       <h3 class="p-title">${esc(p.title)}</h3>
-      <div class="price" style="margin-bottom:10px">${priceHtml(p, { showSave: true })}</div>
+      <div class="price" style="margin-bottom:10px">${priceHtml(p, { showFrom: true, showSave: true })}</div>
       ${p.description ? `<p class="p-desc">${esc(p.description)}</p>` : ''}
       ${p.stock === 0 ? '<p><span class="badge gray">Agotado</span></p>' : p.stock < 99999 && p.stock <= 5 ? `<p class="muted">¡Quedan ${p.stock}!</p>` : ''}
       ${canBuy ? options.map((g, gi) => `
@@ -870,11 +870,33 @@ function openProduct(id) {
         });
         return sel;
       };
+      const missingGroup = (sel) => options.find((g, gi) => g.required && (g.items || []).some((i) => i.available !== false) && !sel.some(([x]) => x === gi));
       const update = () => {
         s.querySelector('.qty span').textContent = qty;
-        const unit = lineUnit({ id: p.id, sel: selection() });
-        s.querySelector('[data-total]').textContent = money(unit * qty, cur());
+        const sel = selection();
+        const missing = missingGroup(sel);
+        const addBtn = s.querySelector('[data-add]');
+        if (missing) {
+          addBtn.textContent = `Selecciona ${missing.title || 'una opción'}`;
+        } else {
+          const unit = lineUnit({ id: p.id, sel });
+          addBtn.innerHTML = `Agregar · <span data-total>${money(unit * qty, cur())}</span>`;
+          s.querySelector('.error-box').hidden = true;
+        }
       };
+      // Permitir deseleccionar radios al tocar de nuevo la opción marcada
+      s.querySelectorAll('label.opt').forEach((lbl) => {
+        const inp = lbl.querySelector('input[type=radio]');
+        if (!inp) return;
+        lbl.addEventListener('pointerdown', () => { inp.dataset.was = inp.checked ? '1' : ''; });
+        inp.addEventListener('click', () => {
+          if (inp.dataset.was === '1') {
+            inp.checked = false;
+            inp.dataset.was = '';
+            update();
+          }
+        });
+      });
       s.addEventListener('change', update);
       s.querySelectorAll('[data-q]').forEach((b) => (b.onclick = () => {
         const max = p.stock < 99999 ? p.stock : 999;
@@ -883,7 +905,7 @@ function openProduct(id) {
       }));
       s.querySelector('[data-add]').onclick = () => {
         const sel = selection();
-        const missing = options.find((g, gi) => g.required && (g.items || []).some((i) => i.available !== false) && !sel.some(([x]) => x === gi));
+        const missing = missingGroup(sel);
         const err = s.querySelector('.error-box');
         if (missing) { err.textContent = `Elige una opción en "${missing.title || 'Opciones'}".`; err.hidden = false; return; }
         const note = s.querySelector('#pnote').value.trim();
