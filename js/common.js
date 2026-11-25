@@ -303,6 +303,12 @@ export const DEFAULT_DESIGN = {
     size: 'md', fullHeight: false,
   },
   animations: { intro: 'none', entrance: 'none', productAnim: 'none', hover: 'none', heroMotion: 'none', ambient: 'none', scrollBar: false, speed: 'normal' },
+  topbar: {
+    announceOn: true,
+    announceText: 'Envíos a todo Chile · Seguimiento online disponible · Regalo incluido en cada par',
+    marqueeOn: true,
+    marqueeText: 'En cada par de zapatillas: calcetines + sticker + llavero GRATIS · Envíos a todo Chile con seguimiento · Calidades G5 · PK · LX garantizadas · Atención directa por WhatsApp',
+  },
   blocks: [
     { id: 'b-hero', type: 'hero', visible: true },
     { id: 'b-catalog', type: 'catalog', visible: true, template: 'list', showCategories: true, showSearch: true, showSortFilter: true, showTitle: true, showPrice: true, showDescription: true, showExternalLink: false, showCartButton: true },
@@ -322,6 +328,7 @@ export function withDefaults(cfg = {}) {
       background: { ...DEFAULT_DESIGN.background, ...(d.background || {}) },
       hero: { ...DEFAULT_DESIGN.hero, ...(d.hero || {}) },
       animations: { ...DEFAULT_DESIGN.animations, ...(d.animations || {}) },
+      topbar: { ...DEFAULT_DESIGN.topbar, ...(d.topbar || {}) },
       blocks: Array.isArray(d.blocks) && d.blocks.length ? d.blocks : DEFAULT_DESIGN.blocks,
     },
     checkout: cfg.checkout || {},

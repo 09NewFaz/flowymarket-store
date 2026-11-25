@@ -90,7 +90,7 @@ function toast(msg) {
 
 function thumbHtml(p, overlay = '') {
   const src = safeUrl(p?.img);
-  return `<div class="thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : ICON.tag}${overlay}</div>`;
+  return `<div class="thumb">${src ? `<img class="thumb-main" src="${esc(src)}" alt="" loading="lazy">` : ICON.tag}${overlay}</div>`;
 }
 function minOptionPrice(p) {
   let min = Infinity;
@@ -256,6 +256,7 @@ function renderCatalog(b = {}) {
       ${showTools ? `<div class="tools">
         <button class="pill ${state.sort !== 'default' ? 'on' : ''}" data-act="sort">${ICON.sort} Ordenar</button>
         <button class="pill ${filtersOn ? 'on' : ''}" data-act="filter">${ICON.filter} Filtrar</button>
+        ${state.query ? `<button class="pill on" data-act="clear-q">“${esc(state.query)}” ×</button>` : ''}
       </div>` : ''}
     </div>` : ''}
     ${groups.length ? groups.map((g) => `
@@ -319,11 +320,21 @@ function renderBlock(b) {
       const items = (b.categoryId ? state.prods.filter((p) => p.category_id === b.categoryId) : state.prods).slice(0, 16);
       if (!items.length) return '';
       return `<section id="${id}" class="block-sec">
-        ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : ''}
-        <div class="prod-carousel">${items.map((p) => `<div class="car-card" role="button" tabindex="0" data-product="${esc(p.id)}">
-          ${thumbHtml(p)}
-          <div class="car-body"><b>${esc(p.title)}</b>${b.showPrice !== false ? `<div class="price">${priceHtml(p)}</div>` : ''}</div>
-        </div>`).join('')}</div>
+        <div class="sec-head">
+          ${b.title ? `<h2 class="sec-title">${esc(b.title)}</h2>` : '<span></span>'}
+          <div class="car-controls">
+            <button type="button" class="car-nav" data-car-dir="-1" aria-label="Anterior">‹</button>
+            <button type="button" class="car-nav" data-car-dir="1" aria-label="Siguiente">›</button>
+          </div>
+        </div>
+        <div class="car-wrap">
+          <button type="button" class="car-edge prev" data-car-dir="-1" aria-label="Anterior">‹</button>
+          <div class="prod-carousel">${items.map((p) => `<div class="car-card" role="button" tabindex="0" data-product="${esc(p.id)}">
+            ${thumbHtml(p)}
+            <div class="car-body"><b>${esc(p.title)}</b>${b.showPrice !== false ? `<div class="price">${priceHtml(p)}</div>` : ''}</div>
+          </div>`).join('')}</div>
+          <button type="button" class="car-edge next" data-car-dir="1" aria-label="Siguiente">›</button>
+        </div>
       </section>`;
     }
     case 'bio': {
@@ -666,11 +677,91 @@ function setupAnimations(replay = false) {
         animObs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.05, rootMargin: '0px 0px -16px 0px' });
+  }, { threshold: 0, rootMargin: '60px 0px 60px 0px' });
   targets.forEach((el, idx) => {
     if (!el.classList.contains('card')) el.style.setProperty('--stagger', `${Math.min(idx, 6) * 70}ms`);
     animObs.observe(el);
   });
+}
+
+const SUBMENUS = {
+  'air jordan': [
+    { label: 'Air Jordan 1', q: 'Air Jordan 1' },
+    { label: 'Air Jordan 3', q: 'Air Jordan 3' },
+    { label: 'Air Jordan 4', q: 'Air Jordan 4' },
+    { label: 'Air Jordan 5 & 6', q: 'Air Jordan 5' },
+    { label: 'Air Jordan 11', q: 'Air Jordan 11' },
+    { label: 'Air Jordan 12', q: 'Air Jordan 12' },
+  ],
+  nike: [
+    { label: 'Air Force 1', q: 'Air Force 1' },
+    { label: 'Air Max DN', q: 'Air Max DN' },
+    { label: 'Air Max Plus', q: 'Air Max Plus' },
+    { label: 'SB Dunk', q: 'Dunk' },
+  ],
+  designer: [
+    { label: 'Balenciaga Runner', q: 'Balenciaga' },
+    { label: 'Giuseppe Zanotti', q: 'Giuseppe Zanotti' },
+  ],
+  ropa: [
+    { label: 'Moose Knuckles', q: 'Moose Knuckles' },
+    { label: 'Polerón Nike Tech', q: 'Polerón Nike Tech' },
+    { label: 'Conjunto Nike Tech', q: 'Conjunto Nike Tech' },
+    { label: 'Shorts', q: 'Short' },
+  ],
+};
+
+function renderTopNav() {
+  const { store, design } = state.cfg;
+  const tb = design.topbar || {};
+  const logo = safeUrl(store.logo);
+  const navCats = state.cats.filter((c) => state.prods.some((p) => p.category_id === c.id)).slice(0, 7);
+  const count = cartCount();
+  const chevron = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const annHtml = tb.announceOn !== false && String(tb.announceText || '').trim()
+    ? `<div class="announce-bar">${esc(tb.announceText)}</div>`
+    : '';
+  return `${annHtml}
+    <nav class="store-nav" aria-label="Navegación principal">
+      <div class="nav-inner">
+        <div class="nav-left">
+          <button type="button" class="nav-ic nav-burger" data-act="menu" aria-label="Menú">${ICON.menu}</button>
+          <a class="nav-brand" href="#top">
+            ${logo ? `<img src="${esc(logo)}" alt="">` : ''}
+            <span>${esc(store.name)}</span>
+          </a>
+        </div>
+        <div class="nav-links">
+          ${navCats.map((c) => {
+            const subs = SUBMENUS[c.name.trim().toLowerCase()];
+            if (!subs) return `<button type="button" class="nav-link" data-cat="${esc(c.id)}">${esc(c.name)}</button>`;
+            return `<div class="nav-drop">
+              <button type="button" class="nav-link" data-cat="${esc(c.id)}">${esc(c.name)}${chevron}</button>
+              <div class="nav-menu">
+                <button type="button" class="nav-sub nav-sub-all" data-cat="${esc(c.id)}">Ver todo ${esc(c.name)}</button>
+                ${subs.map((s) => `<button type="button" class="nav-sub" data-subq="${esc(s.q)}">${esc(s.label)}</button>`).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="nav-actions">
+          <button type="button" class="nav-ic" data-act="nav-search" aria-label="Buscar">${ICON.search}</button>
+          <button type="button" class="nav-ic nav-cart" data-act="cart" aria-label="Ver carrito">
+            ${ICON.cart}
+            <span class="nav-cart-count" ${count ? '' : 'hidden'}>${count}</span>
+          </button>
+        </div>
+      </div>
+    </nav>`;
+}
+
+function renderMarquee() {
+  const tb = state.cfg.design.topbar || {};
+  if (tb.marqueeOn === false) return '';
+  const parts = String(tb.marqueeText || '').split('·').map((s) => s.trim()).filter(Boolean);
+  if (!parts.length) return '';
+  const txt = parts.map((p) => `<span>${esc(p)}</span><span>·</span>`).join('');
+  return `<div class="promo-marquee" aria-hidden="true"><div class="marquee-track">${txt}${txt}</div></div>`;
 }
 
 function render() {
@@ -716,6 +807,8 @@ function render() {
     ${bgVid ? `<div class="bg-video-wrap"><video src="${esc(bgVid)}" autoplay muted loop playsinline></video><div style="background:rgba(${ovRgb},${ovAlpha})"></div></div>` : ''}
     ${PREVIEW ? '<div class="banner-preview">Vista previa · los cambios aún no están publicados</div>' : ''}
     ${checkout.paused ? '<div class="banner-paused">La tienda no está recibiendo pedidos en este momento.</div>' : ''}
+    ${renderTopNav()}
+    ${renderMarquee()}
     <div class="page" id="top" data-anim="${ent}" data-speed="${speed}" data-hover="${hover}" data-hero-motion="${heroMotion}" data-prod-anim="${prodAnim}" data-btn-style="${btnStyle}" data-card-style="${cardStyle}" data-width="${pageWidth}">
       ${blocks.map(renderBlock).join('')}
       ${hasCustomFooter ? '' : `<footer class="footer">© ${new Date().getFullYear()} ${esc(store.name)}</footer>`}
@@ -730,6 +823,12 @@ function render() {
 }
 
 function updateCartFab(bump) {
+  const count = cartCount();
+  const navBadge = $('.nav-cart-count');
+  if (navBadge) {
+    navBadge.textContent = count;
+    navBadge.hidden = count === 0;
+  }
   $('.cart-fab')?.remove();
   const html = cartFabHtml();
   if (!html) return;
@@ -788,17 +887,36 @@ const head = (title) => `<div class="sheet-head"><h2>${esc(title)}</h2><button c
 
 function openMenu() {
   const root = $('#overlay-root');
-  root.innerHTML = `<div class="drawer-backdrop"><nav class="drawer"><h2>Categorías</h2>
-    ${state.cats.filter((c) => state.prods.some((p) => p.category_id === c.id)).map((c) => `<button class="link" data-cat="${esc(c.id)}">${esc(c.name)}</button>`).join('')}
+  const activeCats = state.cats.filter((c) => state.prods.some((p) => p.category_id === c.id));
+  root.innerHTML = `<div class="drawer-backdrop"><nav class="drawer">
+    <div class="drawer-head"><h2>${esc(state.cfg.store.name || 'Menú')}</h2><button class="close-btn" data-x aria-label="Cerrar">×</button></div>
+    ${activeCats.map((c) => {
+      const subs = SUBMENUS[c.name.trim().toLowerCase()];
+      return `<div class="drawer-group">
+        <button class="link" data-cat="${esc(c.id)}">${esc(c.name)}</button>
+        ${subs ? `<div class="drawer-subs">${subs.map((s) => `<button class="sub-link" data-subq="${esc(s.q)}">${esc(s.label)}</button>`).join('')}</div>` : ''}
+      </div>`;
+    }).join('')}
   </nav></div>`;
   document.body.style.overflow = 'hidden';
   root.firstElementChild.addEventListener('click', (e) => {
+    const sub = e.target.closest('[data-subq]');
     const b = e.target.closest('[data-cat]');
-    if (b || e.target === root.firstElementChild) {
+    if (sub || b || e.target === root.firstElementChild || e.target.closest('[data-x]')) {
       closeSheet();
-      if (b) { clearSearchAndSort(); goToCat(b.dataset.cat); }
+      if (sub) { applySubQuery(sub.dataset.subq); }
+      else if (b) { clearSearchAndSort(); goToCat(b.dataset.cat); }
     }
   });
+}
+
+function applySubQuery(q) {
+  state.query = q;
+  state.sort = 'default';
+  state.searchOpen = false;
+  render();
+  const cat = $('#catalog');
+  if (cat) window.scrollTo({ top: cat.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
 }
 
 function clearSearchAndSort() {
@@ -903,9 +1021,11 @@ function openProduct(id) {
       <div class="price" style="margin-bottom:10px">${priceHtml(p, { showFrom: true, showSave: true })}</div>
       ${p.description ? `<p class="p-desc">${esc(p.description)}</p>` : ''}
       ${p.stock === 0 ? '<p><span class="badge gray">Agotado</span></p>' : p.stock < 99999 && p.stock <= 5 ? `<p class="muted">¡Quedan ${p.stock}!</p>` : ''}
-      ${canBuy ? options.map((g, gi) => `
-        <div class="opt-group" data-group="${gi}">
+      ${canBuy ? options.map((g, gi) => {
+        const isPill = !g.multi && (g.items || []).length <= 6;
+        return `<div class="opt-group ${isPill ? 'is-pills' : ''}" data-group="${gi}">
           <h4>${esc(g.title || 'Opciones')} <small class="${g.required ? 'req' : ''}">${g.required ? 'Obligatorio' : 'Opcional'}${g.multi ? ' · varias' : ''}</small></h4>
+          <div class="${isPill ? 'opt-pills' : 'opt-list'}">
           ${(g.items || []).map((it, ii) => {
             const off = it.available === false;
             return `<label class="opt ${off ? 'disabled' : ''}">
@@ -914,7 +1034,9 @@ function openProduct(id) {
               ${Number(it.price) > 0 ? `<small>${isOptionPriced(p) ? '' : '+'}${money(it.price, cur())}</small>` : ''}
             </label>`;
           }).join('')}
-        </div>`).join('') : ''}
+          </div>
+        </div>`;
+      }).join('') : ''}
       ${canBuy ? `<div class="field"><label for="pnote">Nota para este producto (opcional)</label><textarea id="pnote" rows="2" maxlength="300" placeholder="Ej: talle, color, aclaraciones…"></textarea></div>` : ''}
       <div class="error-box" hidden></div>
       ${related.length ? `<div class="related-sec">
@@ -1081,7 +1203,7 @@ function openCheckout() {
   ].filter(Boolean);
   const addr = ck.addr || {};
   const questions = ck.questionsOn && Array.isArray(ck.questions) ? ck.questions : [];
-  const saved = JSON.parse(localStorage.getItem('fm-customer') || '{}');
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('fm-customer') || '{}') || {}; } catch { return {}; } })();
 
   const html = `${head('Finalizar pedido')}
   <form class="sheet-body" id="ckform" novalidate>
@@ -1332,12 +1454,32 @@ document.addEventListener('click', (e) => {
   const pop = e.target.closest('[data-open-popup]');
   if (pop) return openPopupBlock(pop.dataset.openPopup);
 
+  const sq = e.target.closest('[data-subq]');
+  if (sq) return applySubQuery(sq.dataset.subq);
+  const carBtn = e.target.closest('[data-car-dir]');
+  if (carBtn) {
+    const track = carBtn.closest('.block-sec')?.querySelector('.prod-carousel');
+    if (track) track.scrollBy({ left: Number(carBtn.dataset.carDir) * Math.max(320, track.clientWidth * 0.72), behavior: 'smooth' });
+    return;
+  }
+
   const t = e.target.closest('[data-act],[data-cat],[data-product]');
   if (!t) return;
   if (t.dataset.product) return openProduct(t.dataset.product);
   if (t.dataset.cat) { clearSearchAndSort(); return goToCat(t.dataset.cat); }
   switch (t.dataset.act) {
     case 'menu': return openMenu();
+    case 'clear-q':
+      state.query = '';
+      state.searchOpen = false;
+      render();
+      return;
+    case 'nav-search':
+      state.searchOpen = true;
+      $('.searchbox')?.classList.add('open');
+      $('#catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => $('#q')?.focus(), 220);
+      return;
     case 'search':
       state.searchOpen = !state.searchOpen;
       $('.searchbox')?.classList.toggle('open', state.searchOpen);
@@ -1374,8 +1516,10 @@ document.addEventListener('input', (e) => {
     state.query = e.target.value;
     render();
     const q = $('#q');
-    q.focus();
-    q.setSelectionRange(q.value.length, q.value.length);
+    if (q) {
+      q.focus();
+      q.setSelectionRange(q.value.length, q.value.length);
+    }
   }, 200);
 });
 
